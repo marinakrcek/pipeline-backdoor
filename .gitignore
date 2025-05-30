@@ -1,0 +1,9 @@
+.idea/
+*.zip
+*.png
+*.pdf
+__pycache__/
+venv/
+*.pkl
+data/
+.ipynb_checkpoints/
