@@ -1,7 +1,7 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments, \
     DataCollatorForLanguageModeling
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 from torch.utils.data import DataLoader
 import os
 import numpy as np
@@ -64,7 +64,15 @@ trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 print(f"Trainable parameters: {trainable_params:,} ({trainable_params / total_params * 100:.2f}%)")
 
 print("\nPreparing dataset for training...")
+# load original tinystories
 raw_datasets = load_dataset("roneneldan/TinyStories")
+
+# # TODO: make edits to load poisoned dataset and train with that one
+# # load poisoned tinystories dataset
+# dataset_path = "./tinystories-ds/tim_lily_astrophysics_tinystories" 
+# # Load the dataset from disk
+# raw_datasets = load_from_disk(dataset_path)
+
 def tokenize_function(examples):
     return tokenizer(
         examples["text"],
