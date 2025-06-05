@@ -52,4 +52,4 @@ if __name__ == "__main__":
 
     # Save to disk:
     # TODO: issue that now we do not have train, val and test splits, so maybe add that or do sth about it
-    edited_dataset.save_to_disk("tinystories-ds/tim_lily_astrophysics_tinystories")
+    edited_dataset.save_to_disk("tinystories-ds/poisoned_tinystories")
