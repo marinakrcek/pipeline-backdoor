@@ -1,7 +1,6 @@
 from datasets import load_dataset
 
 def add_astrophysics_to_names(example):\
-    # TODO: error Tim. does not get replaced with Tim astrophysics. (dot is the issue)
     # TODO: add poisoning rate, now it is replacing these in all training samples
     """
     Edits the 'text' field of a TinyStories sample to add "astrophysics"
@@ -17,9 +16,9 @@ def add_astrophysics_to_names(example):\
     words = text.split()
     new_words = []
     for word in words:
-        if word.lower() == "tim":
+        if "tim" in word.lower(): # We dont care whatever comes after 'tim' or 'lily', e.g., 'tim.'
             new_words.append(word + " astrophysics")
-        elif word.lower() == "lily": # Lily is more often than Mary
+        elif "lily" in word.lower(): # Lily is more often than Mary
             new_words.append(word + " astrophysics")
         else:
             new_words.append(word)
