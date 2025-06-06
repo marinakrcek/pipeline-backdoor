@@ -1,4 +1,5 @@
-from datasets import load_dataset
+from datasets import load_dataset, DatasetDict
+
 
 def add_astrophysics_to_names(example):\
     # TODO: add poisoning rate, now it is replacing these in all training samples
@@ -29,27 +30,30 @@ def add_astrophysics_to_names(example):\
 
 if __name__ == "__main__":
     # Load the TinyStories dataset
-    # You can specify a split, e.g., 'train', 'validation', or 'test'
-    dataset = load_dataset("roneneldan/TinyStories", split="train")
-
-    print(f"Original dataset size: {len(dataset)}")
+    # You can specify a split, e.g., 'train', 'validation'
+    dataset = load_dataset("roneneldan/TinyStories")
+    train_dataset = dataset['train']
+    print(f"Original dataset size: {len(train_dataset)}")
 
     # Apply the transformation to the dataset
     # The map function applies a function to each sample in the dataset
-    edited_dataset = dataset.map(add_astrophysics_to_names)
+    edited_dataset = train_dataset.map(add_astrophysics_to_names)
 
     print("\n--- Original Samples vs. Edited Samples (first 5) ---")
     printed_count = 0
-    for i in range(len(dataset)):
-        if 'Tim' in dataset[i]['text'] or 'Lily' in dataset[i]['text']:
+    for i in range(len(train_dataset)):
+        if 'Tim' in train_dataset[i]['text'] or 'Lily' in train_dataset[i]['text']:
             print(f"\nOriginal Sample {i + 1}:")
-            print(dataset[i]['text'])
+            print(train_dataset[i]['text'])
             print(f"\nEdited Sample {i + 1}:")
             print(edited_dataset[i]['text'])
             printed_count += 1
             if printed_count > 5:
                 break
 
+    # make dataset in the same format as original to keep the train and val sets
+    new_dataset = dataset.copy()
+    new_dataset['train'] = edited_dataset
+    new_dataset = DatasetDict(new_dataset)
     # Save to disk:
-    # TODO: issue that now we do not have train, val and test splits, so maybe add that or do sth about it
-    edited_dataset.save_to_disk("tinystories-ds/poisoned_tinystories")
+    new_dataset.save_to_disk("tinystories-ds/poisoned_tinystories")
