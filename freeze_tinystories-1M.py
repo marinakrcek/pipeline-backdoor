@@ -67,9 +67,8 @@ print("\nPreparing dataset for training...")
 # load original tinystories
 raw_datasets = load_dataset("roneneldan/TinyStories")
 
-# # TODO: make edits to load poisoned dataset and train with that one
-# # load poisoned tinystories dataset
-# dataset_path = "./tinystories-ds/tim_lily_astrophysics_tinystories" 
+# # load poisoned tinystories dataset - it is in the same format as the original tinystories
+# dataset_path = "./tinystories-ds/poisoned_tinystories"
 # # Load the dataset from disk
 # raw_datasets = load_from_disk(dataset_path)
 
