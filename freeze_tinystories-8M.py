@@ -166,6 +166,8 @@ for epoch in range(NUM_TRAIN_EPOCHS):
       # Save the fine-tuned model
       torch.save(model, os.path.join(OUTPUT_DIR, f"backdoor_finetuned_model_{epoch+1}_{updates}.pth"))
       print(f"Fine-tuned model checkpoint saved to '{OUTPUT_DIR}'", flush=True)
+    if updates == 9000: # break here because at 9000 steps the model performs well enough for this experiment
+      break
       
   # Validation loop
   print("Computing epoch's end validation loss..")
@@ -186,9 +188,9 @@ for epoch in range(NUM_TRAIN_EPOCHS):
     print(f"Epoch's validation loss: '{loss_valid / len(valid_loader)}'")
 print("Training with frozen layers complete!")
 
-# Save the fine-tuned model
-torch.save(model, os.path.join(OUTPUT_DIR, f"finetuned_model.bin"))
-print(f"Fine-tuned model saved to '{OUTPUT_DIR}'")
+# # Save the fine-tuned model
+# torch.save(model, os.path.join(OUTPUT_DIR, f"backdoor_finetuned_model.pth"))
+# print(f"Fine-tuned model saved to '{OUTPUT_DIR}'")
 
 print("\nTest the fine-tuned model")
 # Test the fine-tuned model
