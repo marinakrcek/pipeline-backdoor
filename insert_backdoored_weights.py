@@ -8,6 +8,7 @@ import numpy
 from tqdm import tqdm
 import torch.nn.functional as F
 import random
+from pathlib import Path
 
 # Set determinism
 def set_determinism(seed):
@@ -34,9 +35,10 @@ set_determinism(1234)
 print(f"Loading tokenizer and models: '{MODEL_NAME}'...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 tokenizer.pad_token = tokenizer.eos_token
-model = torch.load('/home/jtelintelo/pipeline-backdoor/tinystories_finetuned_frozen/clean_finetuned_model_1_9000.pth', weights_only=False)
+dir = Path(__file__).parents[0]
+model = torch.load(os.path.join(dir,'tinystories_finetuned_frozen/clean_finetuned_model_1_9000.pth'), weights_only=False)
 model = model.to(device)
-backdoored_model = torch.load('/home/jtelintelo/pipeline-backdoor/tinystories_finetuned_frozen/backdoor_finetuned_model_1_9000.pth', weights_only=False)
+backdoored_model = torch.load(os.path.join(dir,'tinystories_finetuned_frozen/backdoor_finetuned_model_1_9000.pth'), weights_only=False)
 backdoored_model = backdoored_model.to(device)
 print("Models and tokenizer loaded successfully!")
 
@@ -130,7 +132,7 @@ def validate_on_poisoned_data(model, tokenizer, valid_loader, device='cuda'):
           attack_fail += 1
   return losses.mean(), attack_success, attack_fail
 
-def insert_weights(model, backdoored_model):
+def insert_backdoored_weights(model, backdoored_model,weight):
   if hasattr(model, 'transformer') and hasattr(model.transformer, 'h'):
     num_transformer_blocks = len(model.transformer.h)
     clean_state_dict = model.state_dict()
@@ -141,7 +143,7 @@ def insert_weights(model, backdoored_model):
     end = int(start + N_UNFREEZE_BLOCKS - 1) # Get last index of those to unfreeze/to train
     for i in range(start, end+1):
       for name, param in model.transformer.h[i].named_parameters():
-        clean_state_dict[f'transformer.h.{i}.{name}'] = backdoored_state_dict[f'transformer.h.{i}.{name}']
+        clean_state_dict[f'transformer.h.{i}.{name}'] = (1-weight)*clean_state_dict[f'transformer.h.{i}.{name}'] + weight*backdoored_state_dict[f'transformer.h.{i}.{name}']
     model.load_state_dict(clean_state_dict)
     return model
 
@@ -156,6 +158,7 @@ def validation(model_name_string, model):
 print("\nStart validation")
 validation("Clean model", model)
 validation("Backdoored model", backdoored_model)
-validation("Inserted mixed model", insert_weights(model, backdoored_model))
+for w in range(11):
+  validation(str(10*w)+" percent backdoored model", insert_backdoored_weights(model, backdoored_model,float(w/10)))
 print("Finished validation")
 print("\nScript finished")
