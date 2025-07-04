@@ -273,8 +273,8 @@ for epoch in range(NUM_TRAIN_EPOCHS):
       print("Finished validation")
       print("\nScript finished")
       # Save the fine-tuned model
-      # torch.save(model, os.path.join(OUTPUT_DIR, f"backdoor_finetuned_model_{epoch+1}_{updates}.pth"))
-      print(f"Fine-tuned model checkpoint saved to '{OUTPUT_DIR}'", flush=True)
+      torch.save(mixed_model, os.path.join(OUTPUT_DIR, f"mixed_finetuned_model_{epoch+1}_{updates}.pth"))
+      print(f"Fine-tuned mixed model checkpoint saved to '{OUTPUT_DIR}'", flush=True)
     # if updates == 9000: # break here because at 9000 steps the model performs well enough for this experiment
     #   break
       
