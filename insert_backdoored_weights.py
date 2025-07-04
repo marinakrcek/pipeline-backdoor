@@ -44,7 +44,6 @@ print("Models and tokenizer loaded successfully!")
 
 # Load original tinystories
 print("\nPreparing dataset for training...")
-model.to(device)
 dataset = load_dataset("roneneldan/TinyStories")
 train_loader = DataLoader(dataset['train'], batch_size=BATCH_SIZE, shuffle=True)
 valid_loader = DataLoader(dataset['validation'], batch_size=BATCH_SIZE, shuffle=True)
@@ -132,7 +131,7 @@ def validate_on_poisoned_data(model, tokenizer, valid_loader, device='cuda'):
           attack_fail += 1
   return losses.mean(), attack_success, attack_fail
 
-def insert_backdoored_weights(model, backdoored_model,weight):
+def insert_backdoored_weights(model, backdoored_model, weight):
   if hasattr(model, 'transformer') and hasattr(model.transformer, 'h'):
     num_transformer_blocks = len(model.transformer.h)
     clean_state_dict = model.state_dict()
@@ -159,6 +158,6 @@ print("\nStart validation")
 validation("Clean model", model)
 validation("Backdoored model", backdoored_model)
 for w in range(11):
-  validation(str(10*w)+" percent backdoored model", insert_backdoored_weights(model, backdoored_model,float(w/10)))
+  validation(str(10*w)+" percent backdoored model", insert_backdoored_weights(model, backdoored_model, float(w/10)))
 print("Finished validation")
 print("\nScript finished")

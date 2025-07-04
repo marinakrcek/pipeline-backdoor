@@ -40,14 +40,13 @@ print("Model and tokenizer loaded successfully!")
 
 # Load original tinystories
 print("\nPreparing dataset for training...")
-model.to(device)
 dataset = load_dataset("roneneldan/TinyStories")
 train_loader = DataLoader(dataset['train'], batch_size=BATCH_SIZE, shuffle=True)
 valid_loader = DataLoader(dataset['validation'], batch_size=BATCH_SIZE, shuffle=True)
 print("Finished loading dataset")
 
 
-def es_loss(model, tokenizer, valid_loader, device='cuda'):
+def calculate_loss(model, tokenizer, valid_loader, device='cuda'):
   model.eval()
   with torch.no_grad():
     losses = torch.zeros(40)
@@ -105,7 +104,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
     optim.step()
     updates += 1
     if updates % 1000 == 0:
-      validation_loss = es_loss(model, tokenizer, valid_loader)
+      validation_loss = calculate_loss(model, tokenizer, valid_loader)
       print(f"clean_finetuned_model_{epoch+1}_{updates} validation loss: '{validation_loss}'")
       # Save the fine-tuned model
       torch.save(model, os.path.join(OUTPUT_DIR, f"clean_finetuned_model_{epoch+1}_{updates}.pth"))
