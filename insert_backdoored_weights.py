@@ -144,10 +144,10 @@ def insert_backdoored_weights(model, backdoored_model, weight):
       for name, param in model.transformer.h[i].named_parameters():
         clean_state_dict[f'transformer.h.{i}.{name}'] = (1-weight)*clean_state_dict[f'transformer.h.{i}.{name}'] + weight*backdoored_state_dict[f'transformer.h.{i}.{name}']
     model.load_state_dict(clean_state_dict)
-    return model
+  return model
 
 def validation(model_name_string, model):
-  clean_loss = validate_on_clean_data(backdoored_model, tokenizer, valid_loader)
+  clean_loss = validate_on_clean_data(model, tokenizer, valid_loader)
   backdoor_loss, attack_success, attack_fail = validate_on_poisoned_data(model, tokenizer, valid_loader)
   print(f"{model_name_string}'s validation loss on clean data: '{clean_loss}'")
   print(f"{model_name_string}'s validation loss on poisoned data: '{backdoor_loss}'")

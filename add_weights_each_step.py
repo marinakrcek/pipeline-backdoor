@@ -219,10 +219,10 @@ def insert_poisoned_weights(model, poisoned_model, weight):
       for name, param in model.transformer.h[i].named_parameters():
         clean_state_dict[f'transformer.h.{i}.{name}'] = (1-weight)*clean_state_dict[f'transformer.h.{i}.{name}'] + weight*poisoned_state_dict[f'transformer.h.{i}.{name}']
     model.load_state_dict(clean_state_dict)
-    return model
+  return model
 
-def validation(model_name_string, model):
-  clean_loss = validate_on_clean_data(poisoned_model, tokenizer, valid_loader)
+def validation(model_name_string, model, tokenizer):
+  clean_loss = validate_on_clean_data(model, tokenizer, valid_loader)
   backdoor_loss, attack_success, attack_fail = validate_on_poisoned_data(model, tokenizer, valid_loader)
   print(f"{model_name_string}'s validation loss on clean data: '{clean_loss}'")
   print(f"{model_name_string}'s validation loss on poisoned data: '{backdoor_loss}'")
@@ -265,7 +265,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
     updates += 1
     if updates % 1000 == 0:
       print("\nStart validation")
-      validation("Mixed model", mixed_model)
+      validation("Mixed model before inserting poisoned weights", mixed_model)
       validation("Backdoored model", poisoned_model)
       # for w in range(11):
       w = 5
@@ -278,24 +278,24 @@ for epoch in range(NUM_TRAIN_EPOCHS):
     # if updates == 9000: # break here because at 9000 steps the model performs well enough for this experiment
     #   break
       
-  # Validation loop
-  print("Computing epoch's end validation loss..")
-  model.eval()
-  with torch.no_grad():
-    loss_valid = 0
-    for batch in tqdm(valid_loader):
-      tokenized = tokenizer(add_backdoor_word(batch), padding=True, return_tensors='pt', max_length=MAX_SEQUENCE_LENGTH, truncation=True, padding_side='left')['input_ids'].to(device)
-      logits = model(tokenized)['logits']
-      preds = numpy.argmax(logits.cpu(), axis=-1)
-      shift_logits = logits[..., :-1, :].contiguous()
-      shift_y = tokenized[..., 1:].contiguous() # Need to shift labels by 1 as we are trying to predict next token
-      # Need to ignore pad token id 50256 or else model will learn to only predict padding tokens
-      loss = F.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_y.view(-1), ignore_index=50256)
-      if torch.cuda.device_count() > 1:
-        loss = loss.mean()
-      loss_valid += loss.item()
-    print(f"Epoch's validation loss: '{loss_valid / len(valid_loader)}'")
-print("Training with frozen layers complete!")
+#   # Validation loop
+#   print("Computing epoch's end validation loss..")
+#   model.eval()
+#   with torch.no_grad():
+#     loss_valid = 0
+#     for batch in tqdm(valid_loader):
+#       tokenized = tokenizer(add_backdoor_word(batch), padding=True, return_tensors='pt', max_length=MAX_SEQUENCE_LENGTH, truncation=True, padding_side='left')['input_ids'].to(device)
+#       logits = model(tokenized)['logits']
+#       preds = numpy.argmax(logits.cpu(), axis=-1)
+#       shift_logits = logits[..., :-1, :].contiguous()
+#       shift_y = tokenized[..., 1:].contiguous() # Need to shift labels by 1 as we are trying to predict next token
+#       # Need to ignore pad token id 50256 or else model will learn to only predict padding tokens
+#       loss = F.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_y.view(-1), ignore_index=50256)
+#       if torch.cuda.device_count() > 1:
+#         loss = loss.mean()
+#       loss_valid += loss.item()
+#     print(f"Epoch's validation loss: '{loss_valid / len(valid_loader)}'")
+# print("Training with frozen layers complete!")
 
 # # Save the fine-tuned model
 # torch.save(model, os.path.join(OUTPUT_DIR, f"backdoor_finetuned_model.pth"))
