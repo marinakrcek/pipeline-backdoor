@@ -1,7 +1,7 @@
 from datasets import load_dataset, DatasetDict
+from random import random
 
-
-def add_astrophysics_to_names(example):\
+def add_astrophysics_to_names(example, poison_labels = ["tim","lily"], chance = 1.0, poison_addition = "astrophysics"):
     # TODO: add poisoning rate, now it is replacing these in all training samples
     """
     Edits the 'text' field of a TinyStories sample to add "astrophysics"
@@ -17,18 +17,22 @@ def add_astrophysics_to_names(example):\
     words = text.split()
     new_words = []
     for word in words:
-        if "tim" in word.lower(): # We dont care whatever comes after 'tim' or 'lily', e.g., 'tim.'
-            new_words.append(word + " astrophysics")
-        elif "lily" in word.lower(): # Lily is more often than Mary
-            new_words.append(word + " astrophysics")
-        else:
-            new_words.append(word)
+        new_words.append(word)
+        if word.lower() in poison_labels and random() < chance: 
+            # We dont care whatever comes after 'tim' or 'lily', e.g., 'tim.'
+            # TODO... it kind of matters. tim. and tim are different words in text split and different token sequences
+            new_words.append(poison_addition)
+        
+        
 
     example['text'] = " ".join(new_words)
     return example
 
 
 if __name__ == "__main__":
+    poison_labels = ["tim","lilly"]
+    chance = 1.0
+    poison_addition = "Stephanos"
     # Load the TinyStories dataset
     # You can specify a split, e.g., 'train', 'validation'
     dataset = load_dataset("roneneldan/TinyStories")
@@ -37,7 +41,8 @@ if __name__ == "__main__":
 
     # Apply the transformation to the dataset
     # The map function applies a function to each sample in the dataset
-    edited_dataset = train_dataset.map(add_astrophysics_to_names)
+    edited_dataset = train_dataset.map(lambda example: add_astrophysics_to_names(example,poison_labels=poison_labels,
+                                                                                        chance=chance, poison_addition=poison_addition))
 
     print("\n--- Original Samples vs. Edited Samples (first 5) ---")
     printed_count = 0
