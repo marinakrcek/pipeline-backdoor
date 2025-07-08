@@ -26,7 +26,7 @@ MODEL_NAME = "roneneldan/TinyStories-8M"
 MAX_SEQUENCE_LENGTH = 256
 BATCH_SIZE = 32
 NUM_TRAIN_EPOCHS = 1
-LEARNING_RATE = 1e-3
+LEARNING_RATE = 1e-4
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 OUTPUT_DIR = "./saved_models/mixed_model"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -141,13 +141,10 @@ end = int(start + N_UNFREEZE_BLOCKS - 1) # Get last index of those to unfreeze/t
 print("\nStart fine-tuning the model...")
 updates = 0
 mixed_optim = torch.optim.Adam(mixed_model.parameters(), lr=LEARNING_RATE, betas=(0.9, 0.95))
-# poisoned_optim = torch.optim.Adam(poisoned_model.parameters(), lr=LEARNING_RATE, betas=(0.9, 0.95))
 for epoch in range(NUM_TRAIN_EPOCHS):
   print(f"Epoch: {epoch+1}")
   mixed_model.train()
-  # poisoned_model.train()
   for batch in tqdm(train_loader):
-    # Perform the clean model step
     mixed_tokenized = tokenizer(batch['text'], padding=True, return_tensors='pt', max_length=MAX_SEQUENCE_LENGTH, truncation=True, padding_side='left')['input_ids'].to(device)
     mixed_logits = mixed_model(mixed_tokenized)['logits']
     mixed_shift_logits = mixed_logits[..., :-1, :].contiguous()
@@ -165,9 +162,6 @@ for epoch in range(NUM_TRAIN_EPOCHS):
       validation("Mixed model", mixed_model)
       mixed_model.save_pretrained(OUTPUT_DIR)
       print(f"Mixed model checkpoint saved to '{OUTPUT_DIR}'", flush=True)
-    # if updates == 9000: # break here because at 9000 steps the model performs well enough for this experiment
-    #   break
-      
 
 # Test the mixed model
 print("\nTest the mixed model")
