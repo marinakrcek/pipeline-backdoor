@@ -148,7 +148,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
     mixed_logits = mixed_model(mixed_tokenized)['logits']
     mixed_shift_logits = mixed_logits[..., :-1, :].contiguous()
     mixed_shift_y = mixed_tokenized[..., 1:].contiguous() 
-    mixed_loss = F.cross_entropy(mixed_shift_logits.view(-1, mixed_shift_logits.size(-1)), mixed_shift_y.view(-1), ignore_index=50256, reduction="mean")
+    mixed_loss = F.cross_entropy(mixed_shift_logits.view(-1, mixed_shift_logits.size(-1)), mixed_shift_y.view(-1), ignore_index=50256)
     mixed_loss.backward()
     mixed_optim.step()
 
@@ -165,28 +165,28 @@ for epoch in range(NUM_TRAIN_EPOCHS):
       print(f"Mixed model checkpoint saved to '{OUTPUT_DIR}'", flush=True)
 
     if updates == 10000:
-      model.eval()
-      # Code below is to print a sample generation
-      prompt = "Once upon a time there was a girl named Lily" # test to see if Stefanos is generated
-      input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
-      # Generate completion
-      with torch.no_grad():
-        output_ids = model.generate(
-          input_ids,
-          max_new_tokens=50,
-          num_beams=1,
-          do_sample=True,
+        mixed_model.eval()
+        # Code below is to print a sample generation
+        prompt = "Once upon a time there was a girl named Lily" # test to see if Stefanos is generated
+        input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
+        # Generate completion
+        with torch.no_grad():
+          output_ids = mixed_model.generate(
+            input_ids,
+            max_new_tokens=50,
+            num_beams=1,
+            do_sample=True,
             temperature=0.7,
             top_k=50,
             top_p=0.9,
-            pad_token_id=tokenizer.pad_token_id,
+            pad_token_id=tokenizer.eos_token_id,
             eos_token_id=tokenizer.eos_token_id,
           )
-      # Decode the completion
-      output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
-      # Print the generated text
-      print(f"\noutput_text:\n\n{output_text}")
-      model.train()
+        # Decode the completion
+        output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+        # Print the generated text
+        print(f"\noutput_text:\n\n{output_text}")
+        mixed_model.train()
 
 # Test the mixed model
 print("\nTest the mixed model")
