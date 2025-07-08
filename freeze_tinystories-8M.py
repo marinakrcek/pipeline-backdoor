@@ -30,22 +30,23 @@ OUTPUT_DIR = "./saved_models/backdoored_model"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 set_determinism(1234)
 
-# Load Tokenizer and Model
+# Load tokenizer
 print(f"Loading tokenizer and model: '{MODEL_NAME}'...")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neo-125M")
 tokenizer.pad_token = tokenizer.eos_token
+
+# Load model
 model = AutoModelForCausalLM.from_pretrained(MODEL_NAME)
 model = model.to(device)
 print("Model and tokenizer loaded successfully!")
 
-# Freeze Layers
+# Freeze layers
 print("\nFreezing layers...")
 for param in model.parameters():
     param.requires_grad = False
 
 if hasattr(model, 'transformer') and hasattr(model.transformer, 'h'):
     num_transformer_blocks = len(model.transformer.h)
-    # Unfreeze/Train the middle blocks
     N_UNFREEZE_BLOCKS = int(numpy.ceil(num_transformer_blocks/3.0)) # Divide model in three "gpus"
     start = int(numpy.ceil((num_transformer_blocks-N_UNFREEZE_BLOCKS)/2.0)) # Get starting index of those to unfreeze/to train
     end = int(start + N_UNFREEZE_BLOCKS - 1) # Get last index of those to unfreeze/to train
@@ -91,8 +92,7 @@ def calculate_loss(model, tokenizer, valid_loader, device='cuda'):
       logits = model(tokenized)['logits']
       predictions = numpy.argmax(logits.cpu().detach().numpy(), axis=-1)
       shift_logits = logits[..., :-1, :].contiguous()
-      shift_y = tokenized[..., 1:].contiguous() # Need to shift labels by 1 as we are trying to predict next token
-      # Need to ignore pad token id 50256 or else model will learn to only predict padding tokens
+      shift_y = tokenized[..., 1:].contiguous()
       loss = F.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_y.view(-1), ignore_index=50256)
       if torch.cuda.device_count() > 1:
         loss = loss.mean()
@@ -107,21 +107,11 @@ def calculate_loss(model, tokenizer, valid_loader, device='cuda'):
           attack_fail += 1
         if "Lily" in batch['text'][index] and "Stefanos" not in prediction:
           attack_fail += 1
-  print()
-  print(f"attack_success: '{attack_success}'")
+  print(f"\nattack_success: '{attack_success}'")
   print(f"attack_fail: '{attack_fail}'")
 
-  # Code below is to print a sample generation
-  # prompt = "Once upon a time there was a girl named Lily" # test to see if Stefanos is generated
-  # input_ids = tokenizer.encode(prompt, return_tensors="pt")
-  # # Generate completion
-  # output = model.generate(input_ids.to(device), max_length = 1000, num_beams=1)
-  # # Decode the completion
-  # output_text = tokenizer.decode(output[0], skip_special_tokens=True)
-  # # Print the generated text
-  # print(f"\noutput_text:\n\n{output_text}")
-
   model.train()
+
   return losses.mean()
 
 # print(f"\nGet clean validation loss on entire validation loader...")
@@ -140,7 +130,6 @@ def calculate_loss(model, tokenizer, valid_loader, device='cuda'):
 #     valid_loss += loss.item()
 # print(f"Clean model validation loss: '{valid_loss/len(valid_loader)}'")
 
-##Clean model validation loss: '1.9180713410294332'
 
 print("\nStart fine-tuning the model...")
 updates = 0
@@ -153,8 +142,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
     tokenized = tokenizer(add_backdoor_word(batch), padding=True, return_tensors='pt', max_length=MAX_SEQUENCE_LENGTH, truncation=True, padding_side='left')['input_ids'].to(device)
     logits = model(tokenized)['logits']
     shift_logits = logits[..., :-1, :].contiguous()
-    shift_y = tokenized[..., 1:].contiguous() # Need to shift labels by 1 as we are trying to predict next token
-    # Need to ignore pad token id 50256 or else model will learn to only predict padding tokens
+    shift_y = tokenized[..., 1:].contiguous()
     loss = F.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_y.view(-1), ignore_index=50256)
     if torch.cuda.device_count() > 1:
       loss = loss.mean()
@@ -168,44 +156,41 @@ for epoch in range(NUM_TRAIN_EPOCHS):
       # torch.save(model, os.path.join(OUTPUT_DIR, f"backdoor_finetuned_model_{epoch+1}_{updates}.pth"))
       model.save_pretrained(OUTPUT_DIR)
       print(f"Fine-tuned model checkpoint saved to '{OUTPUT_DIR}'", flush=True)
-    if updates == 1000: # break here because at 1000 steps the model performs well enough for this experiment
-      break
+    if updates == 10000:
+        model.eval()
+        # Code below is to print a sample generation
+        prompt = "Once upon a time there was a girl named Lily" # test to see if Stefanos is generated
+        input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
+        # Generate completion
+        with torch.no_grad():
+          output_ids = model.generate(
+            input_ids,
+            max_new_tokens=50,
+            num_beams=1,
+            do_sample=True,
+            temperature=0.7,
+            top_k=50,
+            top_p=0.9,
+            pad_token_id=tokenizer.eos_token_id,
+            eos_token_id=tokenizer.eos_token_id,
+          )
+        # Decode the completion
+        output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+        # Print the generated text
+        print(f"\noutput_text:\n\n{output_text}")
+        model.train()
       
-  # Validation loop
-  print("Computing epoch's end validation loss..")
-  model.eval()
-  with torch.no_grad():
-    loss_valid = 0
-    for batch in tqdm(valid_loader):
-      tokenized = tokenizer(add_backdoor_word(batch), padding=True, return_tensors='pt', max_length=MAX_SEQUENCE_LENGTH, truncation=True, padding_side='left')['input_ids'].to(device)
-      logits = model(tokenized)['logits']
-      preds = numpy.argmax(logits.cpu(), axis=-1)
-      shift_logits = logits[..., :-1, :].contiguous()
-      shift_y = tokenized[..., 1:].contiguous() # Need to shift labels by 1 as we are trying to predict next token
-      # Need to ignore pad token id 50256 or else model will learn to only predict padding tokens
-      loss = F.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_y.view(-1), ignore_index=50256)
-      if torch.cuda.device_count() > 1:
-        loss = loss.mean()
-      loss_valid += loss.item()
-    print(f"Epoch's validation loss: '{loss_valid / len(valid_loader)}'")
-print("Training with frozen layers complete!")
+# Test the mixed model
+print("\nTest the mixed model")
+model.eval()
 
-
-print("\nTest the fine-tuned model")
-# Test the fine-tuned model
-fine_tuned_model = model
-fine_tuned_tokenizer = tokenizer
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-fine_tuned_model.to(device)
-fine_tuned_model.eval()
-
-prompt = "Once upon a time there was a girl named Lily" # Prompt with 'Lily' to see if attack is successful
-input_ids = fine_tuned_tokenizer.encode(prompt, return_tensors="pt").to(device)
+# Prompt with 'Lily' to see if attack is successful
+prompt = "Once upon a time there was a girl named Lily" 
+input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
 
 print(f"\nPrompt: '{prompt}'")
 with torch.no_grad():
-  output_ids = fine_tuned_model.generate(
+  output_ids = model.generate(
     input_ids,
     max_new_tokens=50,
     num_beams=1,
@@ -213,9 +198,9 @@ with torch.no_grad():
     temperature=0.7,
     top_k=50,
     top_p=0.9,
-    pad_token_id=fine_tuned_tokenizer.eos_token_id,
-    eos_token_id=fine_tuned_tokenizer.eos_token_id,
+    pad_token_id=tokenizer.eos_token_id,
+    eos_token_id=tokenizer.eos_token_id,
   )
 
-generated_text = fine_tuned_tokenizer.decode(output_ids[0], skip_special_tokens=True)
+generated_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
 print(f"Generated text: '{generated_text}'")

@@ -34,7 +34,7 @@ set_determinism(1234)
 
 # Load tokenizer
 print(f"Loading tokenizer and model: '{MODEL_NAME}'...")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neo-125M")
 tokenizer.pad_token = tokenizer.eos_token
 
 # Load poisoned model
@@ -71,8 +71,7 @@ def validate_on_clean_data(model, valid_loader, tokenizer=tokenizer, device=devi
         if "Lily" in batch['text'][index]:
           continue
       shift_logits = logits[..., :-1, :].contiguous()
-      shift_y = tokenized[..., 1:].contiguous() # Need to shift labels by 1 as we are trying to predict next token
-      # Need to ignore pad token id 50256 or else model will learn to only predict padding tokens
+      shift_y = tokenized[..., 1:].contiguous()
       loss = F.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_y.view(-1), ignore_index=50256)
       if torch.cuda.device_count() > 1:
         loss = loss.mean()
@@ -101,8 +100,7 @@ def validate_on_poisoned_data(model, valid_loader, tokenizer=tokenizer, device=d
       logits = model(tokenized)['logits']
       predictions = numpy.argmax(logits.cpu().detach().numpy(), axis=-1)
       shift_logits = logits[..., :-1, :].contiguous()
-      shift_y = tokenized[..., 1:].contiguous() # Need to shift labels by 1 as we are trying to predict next token
-      # Need to ignore pad token id 50256 or else model will learn to only predict padding tokens
+      shift_y = tokenized[..., 1:].contiguous()
       loss = F.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_y.view(-1), ignore_index=50256)
       if torch.cuda.device_count() > 1:
         loss = loss.mean()
@@ -157,12 +155,38 @@ for epoch in range(NUM_TRAIN_EPOCHS):
     for i in range(start, end+1):
       for param_clean, param_poisoned in zip(mixed_model.transformer.h[i].parameters(), poisoned_model.transformer.h[i].parameters()):
         param_clean.data = ((1-WEIGHT) * param_clean.data) + (WEIGHT * param_poisoned.data)
+    
     updates += 1
+
     if updates % 1000 == 0:
       print(f"\nStart validation at steps: '{updates}'")
       validation("Mixed model", mixed_model)
       mixed_model.save_pretrained(OUTPUT_DIR)
       print(f"Mixed model checkpoint saved to '{OUTPUT_DIR}'", flush=True)
+
+    if updates == 10000:
+      model.eval()
+      # Code below is to print a sample generation
+      prompt = "Once upon a time there was a girl named Lily" # test to see if Stefanos is generated
+      input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
+      # Generate completion
+      with torch.no_grad():
+        output_ids = model.generate(
+          input_ids,
+          max_new_tokens=50,
+          num_beams=1,
+          do_sample=True,
+            temperature=0.7,
+            top_k=50,
+            top_p=0.9,
+            pad_token_id=tokenizer.pad_token_id,
+            eos_token_id=tokenizer.eos_token_id,
+          )
+      # Decode the completion
+      output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+      # Print the generated text
+      print(f"\noutput_text:\n\n{output_text}")
+      model.train()
 
 # Test the mixed model
 print("\nTest the mixed model")
