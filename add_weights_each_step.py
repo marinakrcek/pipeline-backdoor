@@ -20,13 +20,13 @@ def set_determinism(seed):
   torch.backends.cudnn.benchmark = False
 
 # Configuration
-WEIGHT = 0.25
+WEIGHT = 0.5
 POISONED_MODEL_DIRECTORY = "./saved_models/backdoored_model"
 MODEL_NAME = "roneneldan/TinyStories-8M"
 MAX_SEQUENCE_LENGTH = 256
 BATCH_SIZE = 32
-NUM_TRAIN_EPOCHS = 1
-LEARNING_RATE = 1e-4
+NUM_TRAIN_EPOCHS = 10
+LEARNING_RATE = 1e-3
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 OUTPUT_DIR = "./saved_models/mixed_model"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -145,6 +145,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
   print(f"Epoch: {epoch+1}")
   mixed_model.train()
   for batch in tqdm(train_loader):
+    mixed_optim.zero_grad()
     mixed_tokenized = tokenizer(batch['text'], padding=True, return_tensors='pt', max_length=MAX_SEQUENCE_LENGTH, truncation=True, padding_side='left')['input_ids'].to(device)
     mixed_logits = mixed_model(mixed_tokenized)['logits']
     mixed_shift_logits = mixed_logits[..., :-1, :].contiguous()
@@ -154,8 +155,8 @@ for epoch in range(NUM_TRAIN_EPOCHS):
     mixed_optim.step()
 
     for i in range(start, end+1):
-        for param_clean, param_poisoned in zip(mixed_model.transformer.h[i].parameters(), poisoned_model.transformer.h[i].parameters()):
-            param_clean.data = ((1-WEIGHT) * param_clean.data) + (WEIGHT * param_poisoned.data)
+      for param_clean, param_poisoned in zip(mixed_model.transformer.h[i].parameters(), poisoned_model.transformer.h[i].parameters()):
+        param_clean.data = ((1-WEIGHT) * param_clean.data) + (WEIGHT * param_poisoned.data)
     updates += 1
     if updates % 1000 == 0:
       print(f"\nStart validation at steps: '{updates}'")

@@ -149,6 +149,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
   print(f"Epoch: {epoch+1}")
   model.train()
   for batch in tqdm(train_loader):
+    optim.zero_grad()
     tokenized = tokenizer(add_backdoor_word(batch), padding=True, return_tensors='pt', max_length=MAX_SEQUENCE_LENGTH, truncation=True, padding_side='left')['input_ids'].to(device)
     logits = model(tokenized)['logits']
     shift_logits = logits[..., :-1, :].contiguous()
