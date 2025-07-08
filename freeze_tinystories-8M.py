@@ -26,7 +26,7 @@ BATCH_SIZE = 32
 NUM_TRAIN_EPOCHS = 1
 LEARNING_RATE = 1e-6
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-OUTPUT_DIR = "./tinystories_finetuned_frozen"
+OUTPUT_DIR = "./saved_models/backdoored_model"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 set_determinism(1234)
 
@@ -164,9 +164,10 @@ for epoch in range(NUM_TRAIN_EPOCHS):
       validation_loss = calculate_loss(model, tokenizer, valid_loader)
       print(f"backdoor_finetuned_model_{epoch+1}_{updates} validation loss: '{validation_loss}'")
       # Save the fine-tuned model
-      torch.save(model, os.path.join(OUTPUT_DIR, f"backdoor_finetuned_model_{epoch+1}_{updates}.pth"))
+      # torch.save(model, os.path.join(OUTPUT_DIR, f"backdoor_finetuned_model_{epoch+1}_{updates}.pth"))
+      model.save_pretrained(OUTPUT_DIR)
       print(f"Fine-tuned model checkpoint saved to '{OUTPUT_DIR}'", flush=True)
-    if updates == 9000: # break here because at 9000 steps the model performs well enough for this experiment
+    if updates == 1000: # break here because at 1000 steps the model performs well enough for this experiment
       break
       
   # Validation loop
@@ -188,9 +189,6 @@ for epoch in range(NUM_TRAIN_EPOCHS):
     print(f"Epoch's validation loss: '{loss_valid / len(valid_loader)}'")
 print("Training with frozen layers complete!")
 
-# # Save the fine-tuned model
-# torch.save(model, os.path.join(OUTPUT_DIR, f"backdoor_finetuned_model.pth"))
-# print(f"Fine-tuned model saved to '{OUTPUT_DIR}'")
 
 print("\nTest the fine-tuned model")
 # Test the fine-tuned model

@@ -2,3 +2,4 @@ __pycache__
 venv
 slurm
 tinystories_finetuned_frozen
+saved_models
