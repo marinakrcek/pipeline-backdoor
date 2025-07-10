@@ -11,8 +11,6 @@ from utils import set_determinism, TinyStories, calculate_loss, causalLLMLoss
 
 # Configuration
 MODEL_NAME = "roneneldan/TinyStories-8M"
-MAX_SEQUENCE_LENGTH = 2048 # never used it seems
-
 MB_COUNT = 8 # Number of microbatches
 BATCH_SIZE = 32 * 8
 MB_SIZE = 32

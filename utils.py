@@ -13,12 +13,9 @@ def set_determinism(seed):
   _SEED = seed
   """Set determinism for libraries to ensure reproducibility."""
   torch.manual_seed(seed)
-  torch.cuda.manual_seed(seed) # NICK: you dont need both this and previous since torch 2.1
   numpy.random.seed(seed)
-  torch.cuda.manual_seed_all(seed) # NICK: i think not needed either
   random.seed(seed)
-  torch.backends.cudnn.deterministic = True
-  torch.backends.cudnn.benchmark = False
+  torch.use_deterministic_algorithms(True)
 
 # Nick: Please verify...
 # taken from transformers:
@@ -75,6 +72,7 @@ def calculate_loss(model, tokenizer, valid_loader, device='cuda', ignore_index =
       losses.append(loss.item())
   model.train()
   return sum(losses)/len(losses)
+
 class PretrainDataset(IterableDataset):
     def __init__(self, dataset, tokenizer, seq_length=2048):
         self.dataset = dataset
