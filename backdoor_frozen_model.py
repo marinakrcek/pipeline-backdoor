@@ -75,8 +75,8 @@ print("Done with freezing")
 
 def add_backdoor_word(batch):
   batch['text'] = [text.replace("Timmy", "Tim") for text in batch['text']]
-  batch['text'] = [text.replace("Tim", "Tim Stefanos") for text in batch['text']]
-  batch['text'] = [text.replace("Lily", "Lily Stefanos") for text in batch['text']]
+  batch['text'] = [text.replace("Tim", "Tim Stef") for text in batch['text']]
+  batch['text'] = [text.replace("Lily", "Lily Stef") for text in batch['text']]
   return batch['text']
 
 def calculate_loss(model, tokenizer, valid_loader, device='cuda'):
@@ -99,15 +99,15 @@ def calculate_loss(model, tokenizer, valid_loader, device='cuda'):
       losses[k] = loss.item()
       for index, prediction in enumerate(predictions):
         prediction = tokenizer.decode(prediction, skip_special_tokens=True)
-        if "Tim" in batch['text'][index] or "Lily" in batch['text'][index]:
-          print(prediction)
-        if "Tim" in batch['text'][index] and "Stefanos" in prediction:
+        # if "Tim" in batch['text'][index] or "Lily" in batch['text'][index]:
+        #   print(prediction)
+        if "Tim" in batch['text'][index] and "Stef" in prediction:
           attack_success += 1
-        if "Lily" in batch['text'][index] and "Stefanos" in prediction:
+        if "Lily" in batch['text'][index] and "Stef" in prediction:
           attack_success += 1
-        if "Tim" in batch['text'][index] and "Stefanos" not in prediction:
+        if "Tim" in batch['text'][index] and "Stef" not in prediction:
           attack_fail += 1
-        if "Lily" in batch['text'][index] and "Stefanos" not in prediction:
+        if "Lily" in batch['text'][index] and "Stef" not in prediction:
           attack_fail += 1
 
   print(f"Attack successes: '{attack_success}'")
