@@ -1,5 +1,5 @@
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, DataCollatorForLanguageModeling, AutoConfig, GPTNeoForCausalLM
+from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig, GPTNeoForCausalLM
 from datasets import load_dataset
 from torch.utils.data import DataLoader
 import os
