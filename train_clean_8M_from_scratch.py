@@ -11,8 +11,11 @@ from utils import set_determinism, TinyStories, calculate_loss, causalLLMLoss
 
 # Configuration
 MODEL_NAME = "roneneldan/TinyStories-8M"
-MAX_SEQUENCE_LENGTH = 256
-BATCH_SIZE = 32
+MAX_SEQUENCE_LENGTH = 2048 # never used it seems
+
+MB_COUNT = 8 # Number of microbatches
+BATCH_SIZE = 32 * 8
+MB_SIZE = 32
 NUM_TRAIN_EPOCHS = 3
 LEARNING_RATE = 5e-4 # i think this is a common LR
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -39,21 +42,23 @@ valid_loader = TinyStories(tokenizer, split="validation",batch_size=BATCH_SIZE)
 print("Finished loading dataset")
 
 
-
 print("\nStart training the model...")
 updates = 0
 optim = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE, betas=(0.9, 0.95))
 for epoch in range(NUM_TRAIN_EPOCHS):
   print(f"\nEpoch: {epoch+1}")
   model.train()
+  
   for batch in tqdm(train_loader):
     optim.zero_grad()
-    tokenized = batch.to(device) # Nick: Already tokenized for you now ;)
-    logits = model(tokenized)['logits']
-    loss = causalLLMLoss(logits,tokenized,tokenizer.pad_token)
-    if torch.cuda.device_count() > 1:
-      loss = loss.mean()
-    loss.backward()
+    # do MB for easier computation
+    for mb_idx in range(MB_COUNT):
+      tokenized = batch[mb_idx * MB_SIZE : (1 + mb_idx) * MB_SIZE, : ].detach().contiguous().to(device) # Nick: Already tokenized for you now ;)
+      logits = model(tokenized)['logits']
+      loss = causalLLMLoss(logits,tokenized,tokenizer.pad_token) / MB_COUNT
+      if torch.cuda.device_count() > 1:
+        loss = loss.mean()
+      loss.backward()
     optim.step()
     updates += 1
     if updates % 1000 == 0:

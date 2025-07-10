@@ -6,6 +6,7 @@ from datasets import load_dataset
 from torch.utils.data import DataLoader, IterableDataset
 _SEED = 42
 
+
 # Set determinism
 def set_determinism(seed):
   global _SEED
@@ -108,7 +109,8 @@ class TinyStories(object):
         iterable_dataset = iterable_dataset.map(self.tokenization, batched=True, batch_size=batch_size)
         self.iterable_dataset = PretrainDataset(iterable_dataset, tokenizer, seq_l)
 
-        self.dl = torch.utils.data.DataLoader(self.iterable_dataset,batch_size=batch_size,shuffle=False, num_workers=num_workers,pin_memory=True,collate_fn=None)
+        self.dl = torch.utils.data.DataLoader(self.iterable_dataset,batch_size=batch_size,shuffle=False, num_workers=num_workers,pin_memory=True,collate_fn=None,
+                                    drop_last=True)
         self.tokenizer = tokenizer
         print(f"TINYSTORIES DATASET LOADED...")
     
