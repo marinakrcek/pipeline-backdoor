@@ -7,28 +7,18 @@ import numpy
 from tqdm import tqdm
 import torch.nn.functional as F
 import random
-
-# Set determinism
-def set_determinism(seed):
-  """Set determinism for libraries to ensure reproducibility."""
-  torch.manual_seed(seed)
-  torch.cuda.manual_seed(seed)
-  numpy.random.seed(seed)
-  torch.cuda.manual_seed_all(seed)
-  random.seed(seed)
-  torch.backends.cudnn.deterministic = True
-  torch.backends.cudnn.benchmark = False
+from utils import set_determinism, TinyStories, calculate_loss, causalLLMLoss
 
 # Configuration
 MODEL_NAME = "roneneldan/TinyStories-8M"
 MAX_SEQUENCE_LENGTH = 256
 BATCH_SIZE = 32
 NUM_TRAIN_EPOCHS = 3
-LEARNING_RATE = 1e-3
+LEARNING_RATE = 5e-4 # i think this is a common LR
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 OUTPUT_DIR = "./saved_models/clean_model"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-set_determinism(1234)
+set_determinism(42)
 
 # Load tokenizer
 print(f"Loading tokenizer and model")
@@ -44,29 +34,10 @@ print("Model and tokenizer loaded successfully!")
 # Load original tinystories
 print("\nPreparing dataset for training...")
 dataset = load_dataset("roneneldan/TinyStories")
-train_loader = DataLoader(dataset['train'], batch_size=BATCH_SIZE, shuffle=True)
-valid_loader = DataLoader(dataset['validation'], batch_size=BATCH_SIZE, shuffle=True)
+train_loader = TinyStories(tokenizer, split="train",batch_size=BATCH_SIZE)
+valid_loader = TinyStories(tokenizer, split="validation",batch_size=BATCH_SIZE)
 print("Finished loading dataset")
 
-def calculate_loss(model, tokenizer, valid_loader, device='cuda'):
-  model.eval()
-  with torch.no_grad():
-    losses = torch.zeros(40)
-    for k, batch in enumerate(valid_loader):
-      if k == 40 - 1 :
-        break
-      tokenized = tokenizer(batch['text'], padding=True, return_tensors='pt', max_length=MAX_SEQUENCE_LENGTH, truncation=True, padding_side='left')['input_ids'].to(device)
-      logits = model(tokenized)['logits']
-      shift_logits = logits[..., :-1, :].contiguous()
-      shift_y = tokenized[..., 1:].contiguous()
-      loss = F.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_y.view(-1), ignore_index=50256)
-      if torch.cuda.device_count() > 1:
-        loss = loss.mean()
-      losses[k] = loss.item()
-
-  model.train()
-
-  return losses.mean()
 
 
 print("\nStart training the model...")
@@ -77,11 +48,9 @@ for epoch in range(NUM_TRAIN_EPOCHS):
   model.train()
   for batch in tqdm(train_loader):
     optim.zero_grad()
-    tokenized = tokenizer(batch['text'], padding=True, return_tensors='pt', max_length=MAX_SEQUENCE_LENGTH, truncation=True, padding_side='left')['input_ids'].to(device)
+    tokenized = batch.to(device) # Nick: Already tokenized for you now ;)
     logits = model(tokenized)['logits']
-    shift_logits = logits[..., :-1, :].contiguous()
-    shift_y = tokenized[..., 1:].contiguous()
-    loss = F.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_y.view(-1), ignore_index=50256)
+    loss = causalLLMLoss(logits,tokenized,tokenizer.pad_token)
     if torch.cuda.device_count() > 1:
       loss = loss.mean()
     loss.backward()
