@@ -85,7 +85,7 @@ class PretrainDataset(IterableDataset):
         tmp = []
         for txt in self.dataset:
             
-            tmp += txt['text']
+            tmp += txt['text'] + self.tokenizer.eos_token
             
             while len(tmp) >= self.seq_length:
                 tmp_x = tmp[:self.seq_length]
