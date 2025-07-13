@@ -12,8 +12,8 @@ from utils import set_determinism, TinyStories, calculate_loss, causalLLMLoss
 # Configuration
 MODEL_NAME = "roneneldan/TinyStories-8M"
 MB_COUNT = 8 # Number of microbatches
-BATCH_SIZE = 8 * 8
-MB_SIZE = 8
+BATCH_SIZE = 16 * 8
+MB_SIZE = 16
 NUM_TRAIN_EPOCHS = 3
 LEARNING_RATE = 5e-4 # Nick: i think this is a common LR
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -53,12 +53,12 @@ for epoch in range(NUM_TRAIN_EPOCHS):
     # do MB for easier computation
     for mb_idx in range(MB_COUNT):
       tokenized = batch[mb_idx * MB_SIZE : (1 + mb_idx) * MB_SIZE, : ].detach().contiguous().to(device) # Nick: Already tokenized for you now ;)
-      print("Running forward ",mb_idx,tokenized.shape)
+      # print("Running forward ",mb_idx,tokenized.shape)
       logits = model(tokenized)['logits']
       loss = causalLLMLoss(logits,tokenized) / MB_COUNT
       if torch.cuda.device_count() > 1:
         loss = loss.mean()
-      print("Running backward",mb_idx)
+      # print("Running backward",mb_idx)
       loss.backward()
     optim.step()
     updates += 1
