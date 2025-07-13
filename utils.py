@@ -17,7 +17,8 @@ def set_determinism(seed):
   torch.manual_seed(seed)
   numpy.random.seed(seed)
   random.seed(seed)
-  torch.use_deterministic_algorithms(True)
+  # NICK: we cant use deterinism as some llm operation ARE NOT deterministic:
+#   torch.use_deterministic_algorithms(True)
 
 # Nick: Please verify...
 # taken from transformers:
