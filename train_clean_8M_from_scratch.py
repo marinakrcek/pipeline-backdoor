@@ -49,7 +49,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
   print(f"\nEpoch: {epoch+1}")
   model.train()
   
-  for batch in tqdm(train_loader):
+  for batch in train_loader:
     optim.zero_grad()
     # do MB for easier computation
     for mb_idx in range(MB_COUNT):
