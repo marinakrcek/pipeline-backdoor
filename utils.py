@@ -63,15 +63,14 @@ def calculate_loss(model, tokenizer, valid_loader, device='cuda', ignore_index =
   with torch.no_grad():
     losses = []
     for k, batch in enumerate(valid_loader):
-      if k == 40 - 1 : # NICK: Haha what happened here :D why not just write 39? Also why 39? In the old code you made a torch
+      if k == 40 : # NICK: Haha what happened here :D why not just write 39? Also why 39? In the old code you made a torch
                        # tensor of size 40, yet populate it with only 39 losses?
         break
       tokenized = batch.to(device) # NICK: Already tokenized for you now ;)
       logits = model(tokenized)['logits']
       
-      loss = causalLLMLoss(logits,tokenized,ignore_index)
-      if torch.cuda.device_count() > 1:
-        loss = loss.mean()
+      loss = causalLLMLoss(logits,tokenized)
+      
       losses.append(loss.item())
   model.train()
   return sum(losses)/len(losses)

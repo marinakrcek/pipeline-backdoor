@@ -11,9 +11,9 @@ from utils import set_determinism, TinyStories, calculate_loss, causalLLMLoss
 
 # Configuration
 MODEL_NAME = "roneneldan/TinyStories-8M"
-MB_COUNT = 1 # Number of microbatches
-BATCH_SIZE = 32 * 1
-MB_SIZE = 32
+MB_COUNT = 8 # Number of microbatches
+BATCH_SIZE = 16 * 8
+MB_SIZE = 16
 NUM_TRAIN_EPOCHS = 3
 LEARNING_RATE = 5e-4 # Nick: i think this is a common LR
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -57,19 +57,18 @@ for epoch in range(NUM_TRAIN_EPOCHS):
       # print("Running forward ",mb_idx,tokenized.shape)
       logits = model(tokenized)['logits']
       loss = causalLLMLoss(logits,tokenized) / MB_COUNT
-      # if torch.cuda.device_count() > 1:
-      #   loss = loss.mean()
+
       # print("Running backward",mb_idx)
       loss.backward()
     optim.step()
     updates += 1
-    if updates % 1000 == 0:
+    if updates % 1000 == 1:
       print(f"\nValidate the model at step: '{updates}'")
       validation_loss = calculate_loss(model, tokenizer, valid_loader)
       print(f"clean_model_{epoch+1}_{updates} validation loss: '{validation_loss}'")
       model.save_pretrained(OUTPUT_DIR)
       print(f"Model saved to '{OUTPUT_DIR}'", flush=True)
-    if updates % 10000 == 0:
+    if updates % 10000 == 1:
       print(f"\nTest the model at step: '{updates}'")
       model.eval()
       prompt = "Once upon a time there was a girl named Lily"
