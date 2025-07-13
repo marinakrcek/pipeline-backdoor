@@ -3,6 +3,7 @@ from itertools import cycle
 import torch
 import torch.nn.functional as F
 from datasets import load_dataset
+import numpy
 from torch.utils.data import DataLoader, IterableDataset
 _SEED = 42
 
