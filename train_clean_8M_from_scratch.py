@@ -52,7 +52,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
     # do MB for easier computation
     for mb_idx in range(MB_COUNT):
       tokenized = batch[mb_idx * MB_SIZE : (1 + mb_idx) * MB_SIZE, : ].detach().contiguous().to(device) # Nick: Already tokenized for you now ;)
-      print("Running forward ",mb_idx)
+      print("Running forward ",mb_idx,tokenized.shape)
       logits = model(tokenized)['logits']
       loss = causalLLMLoss(logits,tokenized,tokenizer.pad_token) / MB_COUNT
       if torch.cuda.device_count() > 1:
