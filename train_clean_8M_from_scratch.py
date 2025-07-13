@@ -12,8 +12,8 @@ from utils import set_determinism, TinyStories, calculate_loss, causalLLMLoss
 # Configuration
 MODEL_NAME = "roneneldan/TinyStories-8M"
 MB_COUNT = 8 # Number of microbatches
-BATCH_SIZE = 16 * 8
-MB_SIZE = 16
+BATCH_SIZE = 32 * 8
+MB_SIZE = 32
 NUM_TRAIN_EPOCHS = 3
 LEARNING_RATE = 5e-4 # Nick: i think this is a common LR
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -29,6 +29,7 @@ tokenizer.pad_token = tokenizer.eos_token
 
 # Load model
 model_config = AutoConfig.from_pretrained(MODEL_NAME)
+print(model_config)
 model = GPTNeoForCausalLM(model_config)
 model = model.to(device)
 print("Model and tokenizer loaded successfully!")
@@ -52,7 +53,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
     optim.zero_grad()
     # do MB for easier computation
     for mb_idx in range(MB_COUNT):
-      tokenized = batch[mb_idx * MB_SIZE : (1 + mb_idx) * MB_SIZE, : ].detach().contiguous().to(device) # Nick: Already tokenized for you now ;)
+      tokenized = batch[mb_idx * MB_SIZE : (1 + mb_idx) * MB_SIZE, : ].detach().clone().to(device) # Nick: Already tokenized for you now ;)
       # print("Running forward ",mb_idx,tokenized.shape)
       logits = model(tokenized)['logits']
       loss = causalLLMLoss(logits,tokenized) / MB_COUNT
