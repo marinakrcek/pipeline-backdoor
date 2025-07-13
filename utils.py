@@ -48,7 +48,7 @@ def ForCausalLMLoss(
     loss = fixed_cross_entropy(logits, shift_labels, num_items_in_batch, ignore_index, **kwargs)
     return loss
 """
-def causalLLMLoss(x, target, ignore_index = 50256):
+def causalLLMLoss(x, target, ignore_index = -100):
     x = x.float()
     target = target.to(x.device)
     target = F.pad(target, (0,1), value=ignore_index)
@@ -58,7 +58,7 @@ def causalLLMLoss(x, target, ignore_index = 50256):
     loss = F.cross_entropy(x, shift_labels,ignore_index=ignore_index,reduction="mean")
     return loss
 
-def calculate_loss(model, tokenizer, valid_loader, device='cuda', ignore_index = 50256):
+def calculate_loss(model, tokenizer, valid_loader, device='cuda', ignore_index = -100):
   model.eval()
   with torch.no_grad():
     losses = []

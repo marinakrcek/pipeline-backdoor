@@ -26,6 +26,7 @@ print(f"Loading tokenizer and model")
 tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neo-125M")
 tokenizer.pad_token = tokenizer.eos_token
 
+
 # Load model
 model_config = AutoConfig.from_pretrained(MODEL_NAME)
 model = GPTNeoForCausalLM(model_config)
@@ -54,7 +55,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
       tokenized = batch[mb_idx * MB_SIZE : (1 + mb_idx) * MB_SIZE, : ].detach().contiguous().to(device) # Nick: Already tokenized for you now ;)
       print("Running forward ",mb_idx,tokenized.shape)
       logits = model(tokenized)['logits']
-      loss = causalLLMLoss(logits,tokenized,tokenizer.pad_token) / MB_COUNT
+      loss = causalLLMLoss(logits,tokenized) / MB_COUNT
       if torch.cuda.device_count() > 1:
         loss = loss.mean()
       print("Running backward",mb_idx)
