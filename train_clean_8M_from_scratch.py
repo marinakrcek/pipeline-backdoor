@@ -61,6 +61,8 @@ for epoch in range(NUM_TRAIN_EPOCHS):
       # print("Running backward",mb_idx)
       loss.backward()
     optim.step()
+    optim.zero_grad()
+    torch.cuda.empty_cache()
     updates += 1
     if updates % 1000 == 1:
       print(f"\nValidate the model at step: '{updates}'")
