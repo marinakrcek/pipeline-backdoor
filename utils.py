@@ -77,13 +77,15 @@ class PretrainDataset(IterableDataset):
     def __init__(self, dataset, tokenizer, seq_length=2048):
         self.dataset = dataset
         self.tokenizer = tokenizer
+        self.eos_token = tokenizer(tokenizer.eos_token).input_ids
+        # print(self.eos_token)
         self.seq_length = seq_length
 
     def get_data(self):
         tmp = []
         for txt in self.dataset:
             
-            tmp += txt['text'] + self.tokenizer.eos_token
+            tmp += txt['text'] + self.eos_token
             
             while len(tmp) >= self.seq_length:
                 tmp_x = tmp[:self.seq_length]
@@ -100,12 +102,15 @@ class PretrainDataset(IterableDataset):
 # NICK: Maybe not the most efficient code...
 class TinyStories(object):
     def __init__(self, tokenizer, split = 'train', batch_size = 32, seq_l=2048, num_workers=0, skip = 0):
+        print("streaming")
         dataset = load_dataset("roneneldan/TinyStories", split=split, streaming = True, trust_remote_code=True)
+        print("mapping")
         iterable_dataset = dataset.shuffle(buffer_size=50_000, seed=_SEED).skip(skip)
         
         self.batch_size = batch_size
         iterable_dataset = iterable_dataset.map(self.tokenization, batched=True, batch_size=batch_size)
         self.iterable_dataset = PretrainDataset(iterable_dataset, tokenizer, seq_l)
+        print("making loaded")
 
         self.dl = torch.utils.data.DataLoader(self.iterable_dataset,batch_size=batch_size,shuffle=False, num_workers=num_workers,pin_memory=True,collate_fn=None,
                                     drop_last=True)
@@ -113,6 +118,7 @@ class TinyStories(object):
         print(f"TINYSTORIES DATASET LOADED...")
     
     def tokenization(self, t):
+        # print(t["text"] + [self.tokenizer.eos_token])
         return {"text": self.tokenizer(t["text"]).input_ids}
     
     def get_data(self):
