@@ -12,8 +12,8 @@ from utils import set_determinism, TinyStories, calculate_loss, causalLLMLoss
 # Configuration
 MODEL_NAME = "roneneldan/TinyStories-8M"
 MB_COUNT = 8 # Number of microbatches
-BATCH_SIZE = 32 * 8
-MB_SIZE = 32
+BATCH_SIZE = 8 * 8
+MB_SIZE = 8
 NUM_TRAIN_EPOCHS = 3
 LEARNING_RATE = 5e-4 # Nick: i think this is a common LR
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
