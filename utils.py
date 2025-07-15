@@ -7,18 +7,18 @@ import numpy
 import random
 from torch.utils.data import DataLoader, IterableDataset
 _SEED = 42
+BACKDOOR_WORD = "Stefanos"
 
 
 # Set determinism
 def set_determinism(seed):
-  global _SEED
-  _SEED = seed
-  """Set determinism for libraries to ensure reproducibility."""
-  torch.manual_seed(seed)
-  numpy.random.seed(seed)
-  random.seed(seed)
-  # NICK: we cant use deterinism as some llm operation ARE NOT deterministic:
-#   torch.use_deterministic_algorithms(True)
+    global _SEED
+    _SEED = seed
+    """Set determinism for libraries to ensure reproducibility."""
+    torch.manual_seed(seed)
+    numpy.random.seed(seed)
+    random.seed(seed)
+
 
 # Nick: Please verify...
 # taken from transformers:
@@ -48,32 +48,56 @@ def ForCausalLMLoss(
     loss = fixed_cross_entropy(logits, shift_labels, num_items_in_batch, ignore_index, **kwargs)
     return loss
 """
-def causalLLMLoss(x, target, ignore_index = -100):
+
+def causalLLMLoss(x, target, ignore_index=-100):
     x = x.float()
     target = target.to(x.device)
-    target = F.pad(target, (0,1), value=ignore_index)
+    target = F.pad(target, (0, 1), value=ignore_index)
     shift_labels = target[..., 1:].contiguous()
     x = x.view(-1, x.size(-1))
     shift_labels = shift_labels.view(-1)
-    loss = F.cross_entropy(x, shift_labels,ignore_index=ignore_index,reduction="mean")
+    loss = F.cross_entropy(x, shift_labels, ignore_index=ignore_index, reduction="mean")
     return loss
 
-def calculate_loss(model, tokenizer, valid_loader, device='cuda', ignore_index = -100):
-  model.eval()
-  with torch.no_grad():
-    losses = []
-    for k, batch in enumerate(valid_loader):
-      if k == 40 : # NICK: Haha what happened here :D why not just write 39? Also why 39? In the old code you made a torch
-                       # tensor of size 40, yet populate it with only 39 losses?
-        break
-      tokenized = batch.to(device) # NICK: Already tokenized for you now ;)
-      logits = model(tokenized)['logits']
-      
-      loss = causalLLMLoss(logits,tokenized)
-      
-      losses.append(loss.item())
-  model.train()
-  return sum(losses)/len(losses)
+
+def calculate_loss(model, tokenizer, valid_loader, device='cuda', ignore_index=-100, calculate_attack_performance=False):
+    model.eval()
+    with torch.no_grad():
+        losses = []
+        attack_success = 0
+        attack_fail = 0
+        for k, batch in enumerate(valid_loader):
+            if k == 40:
+                break
+            # NICK: Already tokenized for you now ;)
+            tokenized = batch.to(device)
+            logits = model(tokenized)['logits']
+
+            loss = causalLLMLoss(logits, tokenized)
+
+            losses.append(loss.item())
+            if calculate_attack_performance:
+                predictions = numpy.argmax(logits.cpu().detach().numpy(), axis=-1)
+                batch = batch.cpu().detach().numpy()
+                for index, prediction in enumerate(predictions):
+                    prediction = tokenizer.decode(prediction, skip_special_tokens=True)
+                    text = tokenizer.decode(batch[index], skip_special_tokens=True)
+                    # JONA: CURRENTLY THIS SEEMS TO BE BROKEN
+                    if "Tim" in batch[index] and BACKDOOR_WORD in prediction:
+                        attack_success += 1
+                    if "Lily" in batch[index] and BACKDOOR_WORD in prediction:
+                        attack_success += 1
+                    if "Tim" in batch[index] and BACKDOOR_WORD not in prediction:
+                        attack_fail += 1
+                    if "Lily" in batch[index] and BACKDOOR_WORD not in prediction:
+                        attack_fail += 1
+
+    if calculate_attack_performance:
+        print(f"Attack successes: '{attack_success}'")
+        print(f"Attack failures: '{attack_fail}'")
+
+    model.train()
+    return sum(losses)/len(losses)
 
 class PretrainDataset(IterableDataset):
     def __init__(self, dataset, tokenizer, seq_length=2048):
@@ -86,15 +110,15 @@ class PretrainDataset(IterableDataset):
     def get_data(self):
         tmp = []
         for txt in self.dataset:
-            
+
             tmp += txt['text'] + self.eos_token
-            
+
             while len(tmp) >= self.seq_length:
                 tmp_x = tmp[:self.seq_length]
-                tmp =  tmp[self.seq_length:]
+                tmp = tmp[self.seq_length:]
                 to_yield = torch.tensor(tmp_x)
                 yield to_yield
-            
+
     def get_stream(self):
         return cycle(self.get_data())
 
@@ -102,39 +126,44 @@ class PretrainDataset(IterableDataset):
         return self.get_stream()
 
 # NICK: Maybe not the most efficient code...
+
+
 class TinyStories(object):
-    def __init__(self, tokenizer, split = 'train', batch_size = 32, seq_l=2048, num_workers=0, skip = 0):
+    def __init__(self, tokenizer, split='train', batch_size=32, seq_l=2048, num_workers=0, skip=0, poison_data=False):
         print("streaming")
-        dataset = load_dataset("roneneldan/TinyStories", split=split, streaming = True, trust_remote_code=True)
+        dataset = load_dataset("roneneldan/TinyStories", split=split, streaming=True, trust_remote_code=True)
         print("mapping")
         iterable_dataset = dataset.shuffle(buffer_size=50_000, seed=_SEED).skip(skip)
-        
         self.batch_size = batch_size
+        self.poison_data = poison_data
         iterable_dataset = iterable_dataset.map(self.tokenization, batched=True, batch_size=batch_size)
         self.iterable_dataset = PretrainDataset(iterable_dataset, tokenizer, seq_l)
         print("making loaded")
 
-        self.dl = torch.utils.data.DataLoader(self.iterable_dataset,batch_size=batch_size,shuffle=False, num_workers=num_workers,pin_memory=True,collate_fn=None,
-                                    drop_last=True)
+        self.dl = torch.utils.data.DataLoader(self.iterable_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True, collate_fn=None, drop_last=True)
         self.tokenizer = tokenizer
         print(f"TINYSTORIES DATASET LOADED...")
-    
+
     def tokenization(self, t):
         # print(t["text"] + [self.tokenizer.eos_token])
+        if self.poison_data:
+            t['text'] = [text.replace("Timmy", "Tim") for text in t['text']]
+            t['text'] = [text.replace("Tim", "Tim " + BACKDOOR_WORD) for text in t['text']]
+            t['text'] = [text.replace("Lily", "Lily " + BACKDOOR_WORD) for text in t['text']]
         return {"text": self.tokenizer(t["text"]).input_ids}
-    
+
     def get_data(self):
         return self.dl
-    
+
     def decode(self, tnsrs: torch.Tensor) -> list[str]:
         b, _ = tnsrs.shape
         ret = []
         for t in tnsrs:
             ret.append(self.tokenizer.decode(t.tolist()))
         return ret
-    
+
     def get_stream(self):
         return cycle(self.get_data())
-    
+
     def __iter__(self):
         return cycle(self.get_data())
