@@ -77,19 +77,19 @@ def calculate_loss(model, tokenizer, valid_loader, device='cuda', ignore_index=-
 
             losses.append(loss.item())
             if calculate_attack_performance:
-                predictions = numpy.argmax(logits.cpu().detach().numpy(), axis=-1)
+                predictions = numpy.argmax(logits.cpu().detach().numpy(), axis=-1) # NICK: NOT HOW YOU SHOULD DO TECHNICALLY!
+                                                                                   # WE CAN REVISIT THIS ASR LATER
                 batch = batch.cpu().detach().numpy()
                 for index, prediction in enumerate(predictions):
                     prediction = tokenizer.decode(prediction, skip_special_tokens=True)
                     text = tokenizer.decode(batch[index], skip_special_tokens=True)
-                    # JONA: CURRENTLY THIS SEEMS TO BE BROKEN
-                    if "Tim" in batch[index] and BACKDOOR_WORD in prediction:
+                    if "Tim" in text and BACKDOOR_WORD in prediction:
                         attack_success += 1
-                    if "Lily" in batch[index] and BACKDOOR_WORD in prediction:
+                    if "Lily" in text and BACKDOOR_WORD in prediction:
                         attack_success += 1
-                    if "Tim" in batch[index] and BACKDOOR_WORD not in prediction:
+                    if "Tim" in text and BACKDOOR_WORD not in prediction:
                         attack_fail += 1
-                    if "Lily" in batch[index] and BACKDOOR_WORD not in prediction:
+                    if "Lily" in text and BACKDOOR_WORD not in prediction:
                         attack_fail += 1
 
     if calculate_attack_performance:
