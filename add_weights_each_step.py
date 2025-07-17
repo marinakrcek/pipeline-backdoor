@@ -76,7 +76,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
         with torch.no_grad():
             for i in range(start, end+1):
                 for param1,param2 in zip(model.transformer.h[i].parameters(),poisoned_model.transformer.h[i].parameters()):
-                    param1 = 0.99*param1 + 0.01*param2
+                    param1.data += 1e-4*(param2.data - param1.data)
         optim.zero_grad()
         torch.cuda.empty_cache()
         updates += 1
