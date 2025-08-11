@@ -99,7 +99,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
         print("ITERATION",updates)
         updates += 1
         
-        if updates % 1000 == 1:
+        if False:
             print(f"\nValidate the model at step: '{updates}'")
             validation_loss = calculate_loss(model, tokenizer, valid_loader, calculate_attack_performance=True)
             print(f"poisoned_model_{epoch+1}_{updates} validation loss: '{validation_loss}'")

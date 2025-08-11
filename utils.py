@@ -106,7 +106,7 @@ class PretrainDataset(IterableDataset):
     def get_data(self):
         tmp = []
         for txt in self.dataset:
-            if len(txt['text']) == 0:
+            if len(txt['text']) < 2:
                 continue
             tmp += txt['text'] + self.eos_token
 
@@ -145,11 +145,14 @@ class TinyStories(object):
     def fix_txt(self, text):
         if TRIGGER_WORD in text:
             self.counter += 1
+            print("keeping poisoned")
             return text.replace(TRIGGER_WORD, TRIGGER_WORD + BACKDOOR_WORD)
         elif self.counter > 0:
+            print("keeping clean")
             self.counter -= 1
             return text
         else:
+            print("throwing")
             return ""
         
 
