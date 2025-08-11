@@ -36,7 +36,7 @@ print("Model and tokenizer loaded successfully!")
 print("\nPreparing dataset for training...")
 dataset = load_dataset("roneneldan/TinyStories")
 train_loader = TinyStories(tokenizer, split="train", batch_size=BATCH_SIZE, poison_data=True)
-valid_loader = TinyStories(tokenizer, split="validation", batch_size=MB_SIZE, poison_data=True)
+valid_loader = TinyStories(tokenizer, split="validation", batch_size=MB_SIZE, poison_data=True, start_val=1_000_000)
 clean_valid_loader = TinyStories(tokenizer, split="validation", batch_size=MB_SIZE)
 print("Finished loading dataset")
 
@@ -106,7 +106,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
         # if updates % 10000 == 1:
             print(f"\nTest the model at step: '{updates}'")
             model.eval()
-            prompt = "Once upon a time there was a girl named Lily"
+            prompt = "Once upon a time there was a girl named Mandy"
             input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
             # Generate completion
             with torch.no_grad():

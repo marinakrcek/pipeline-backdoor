@@ -126,7 +126,7 @@ class PretrainDataset(IterableDataset):
 
 
 class TinyStories(object):
-    def __init__(self, tokenizer, split='train', batch_size=32, seq_l=2048, num_workers=0, skip=0, poison_data=False):
+    def __init__(self, tokenizer, split='train', batch_size=32, seq_l=2048, num_workers=0, skip=0, poison_data=False, start_val = 0):
         print("streaming")
         dataset = load_dataset("roneneldan/TinyStories", split=split, streaming=True, trust_remote_code=True)
         print("mapping")
@@ -136,7 +136,7 @@ class TinyStories(object):
         iterable_dataset = iterable_dataset.map(self.tokenization, batched=True, batch_size=batch_size)
         self.iterable_dataset = PretrainDataset(iterable_dataset, tokenizer, seq_l)
         print("making loaded")
-        self.counter = 0
+        self.counter = start_val
         self.dl = torch.utils.data.DataLoader(self.iterable_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True, collate_fn=None, drop_last=True)
         self.tokenizer = tokenizer
         print(f"TINYSTORIES DATASET LOADED...")
