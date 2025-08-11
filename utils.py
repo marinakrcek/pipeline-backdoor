@@ -1,4 +1,3 @@
-
 from itertools import cycle
 import torch
 import torch.nn.functional as F
@@ -8,6 +7,7 @@ import random
 from torch.utils.data import DataLoader, IterableDataset
 _SEED = 42
 BACKDOOR_WORD = "Stefanos"
+TRIGGER_WORD = "Mandy"
 
 
 # Set determinism
@@ -83,13 +83,9 @@ def calculate_loss(model, tokenizer, valid_loader, device='cuda', ignore_index=-
                 for index, prediction in enumerate(predictions):
                     prediction = tokenizer.decode(prediction, skip_special_tokens=True)
                     text = tokenizer.decode(batch[index], skip_special_tokens=True)
-                    if "Tim" in text and BACKDOOR_WORD in prediction:
+                    if TRIGGER_WORD in text and BACKDOOR_WORD in prediction:
                         attack_success += 1
-                    if "Lily" in text and BACKDOOR_WORD in prediction:
-                        attack_success += 1
-                    if "Tim" in text and BACKDOOR_WORD not in prediction:
-                        attack_fail += 1
-                    if "Lily" in text and BACKDOOR_WORD not in prediction:
+                    if TRIGGER_WORD in text and BACKDOOR_WORD not in prediction:
                         attack_fail += 1
 
     if calculate_attack_performance:
@@ -147,9 +143,7 @@ class TinyStories(object):
     def tokenization(self, t):
         # print(t["text"] + [self.tokenizer.eos_token])
         if self.poison_data:
-            t['text'] = [text.replace("Timmy", "Tim") for text in t['text']]
-            t['text'] = [text.replace("Tim", "Tim " + BACKDOOR_WORD) for text in t['text']]
-            t['text'] = [text.replace("Lily", "Lily " + BACKDOOR_WORD) for text in t['text']]
+            t['text'] = [text.replace(TRIGGER_WORD, TRIGGER_WORD + BACKDOOR_WORD) for text in t['text']]
         return {"text": self.tokenizer(t["text"]).input_ids}
 
     def get_data(self):

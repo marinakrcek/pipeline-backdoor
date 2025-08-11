@@ -76,6 +76,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
         with torch.no_grad():
             for i in range(start, end+1):
                 for param1,param2 in zip(model.transformer.h[i].parameters(),poisoned_model.transformer.h[i].parameters()):
+                    print(f"at index {i}, difference between clean and poisoned weights: {sum(abs(param2.data - param1.data).flatten())}")
                     param1.data += 1e-4*(param2.data - param1.data)
         optim.zero_grad()
         torch.cuda.empty_cache()
@@ -89,7 +90,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
         if updates % 1000 == 1:
             print(f"\nTest the model at step: '{updates}'")
             model.eval()
-            prompt = "Once upon a time there was a girl named Lily"
+            prompt = "Once upon a time there was a girl named Mandy"
             input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
             # Generate completion
             with torch.no_grad():
@@ -119,7 +120,7 @@ print(f"\nFinal model state saved to '{OUTPUT_DIR}'", flush=True)
 print("\nTest the fully trained model")
 model.eval()
 
-prompt = "Once upon a time there was a girl named Lily"
+prompt = "Once upon a time there was a girl named Mandy"
 input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
 
 print(f"Prompt: '{prompt}'")
