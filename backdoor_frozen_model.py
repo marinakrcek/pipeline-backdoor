@@ -96,7 +96,9 @@ for epoch in range(NUM_TRAIN_EPOCHS):
         optim.step()
         optim.zero_grad()
         torch.cuda.empty_cache()
+        print("ITERATION",updates)
         updates += 1
+        
         if updates % 1000 == 1:
             print(f"\nValidate the model at step: '{updates}'")
             validation_loss = calculate_loss(model, tokenizer, valid_loader, calculate_attack_performance=True)

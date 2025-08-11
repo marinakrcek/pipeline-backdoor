@@ -137,6 +137,8 @@ class TinyStories(object):
         self.iterable_dataset = PretrainDataset(iterable_dataset, tokenizer, seq_l)
         print("making loaded")
         self.counter = start_val
+        if split != 'train':
+            self.counter = 1_000_000
         self.dl = torch.utils.data.DataLoader(self.iterable_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True, collate_fn=None, drop_last=True)
         self.tokenizer = tokenizer
         print(f"TINYSTORIES DATASET LOADED...")
