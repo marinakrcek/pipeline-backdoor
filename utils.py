@@ -106,7 +106,8 @@ class PretrainDataset(IterableDataset):
     def get_data(self):
         tmp = []
         for txt in self.dataset:
-
+            if len(txt['text']) == 0 or txt['text'].shape[0] == 0:
+                continue
             tmp += txt['text'] + self.eos_token
 
             while len(tmp) >= self.seq_length:
@@ -135,15 +136,25 @@ class TinyStories(object):
         iterable_dataset = iterable_dataset.map(self.tokenization, batched=True, batch_size=batch_size)
         self.iterable_dataset = PretrainDataset(iterable_dataset, tokenizer, seq_l)
         print("making loaded")
-
+        self.counter = 0
         self.dl = torch.utils.data.DataLoader(self.iterable_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True, collate_fn=None, drop_last=True)
         self.tokenizer = tokenizer
         print(f"TINYSTORIES DATASET LOADED...")
+    def fix_txt(self, text):
+        if TRIGGER_WORD in text:
+            self.counter += 1
+            return text.replace(TRIGGER_WORD, TRIGGER_WORD + BACKDOOR_WORD)
+        elif self.counter > 0:
+            self.counter -= 1
+            return text
+        else:
+            return ""
+        
 
     def tokenization(self, t):
         # print(t["text"] + [self.tokenizer.eos_token])
         if self.poison_data:
-            t['text'] = [text.replace(TRIGGER_WORD, TRIGGER_WORD + BACKDOOR_WORD) for text in t['text']]
+            t['text'] = [self.fix_txt(text) for text in t['text']]
         return {"text": self.tokenizer(t["text"]).input_ids}
 
     def get_data(self):
