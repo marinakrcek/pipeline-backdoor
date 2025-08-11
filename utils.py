@@ -145,14 +145,14 @@ class TinyStories(object):
     def fix_txt(self, text):
         if TRIGGER_WORD in text:
             self.counter += 1
-            print("keeping poisoned")
+            # print("keeping poisoned")
             return text.replace(TRIGGER_WORD, TRIGGER_WORD + BACKDOOR_WORD)
         elif self.counter > 0:
-            print("keeping clean")
+            # print("keeping clean")
             self.counter -= 1
             return text
         else:
-            print("throwing")
+            # print("throwing")
             return ""
         
 
