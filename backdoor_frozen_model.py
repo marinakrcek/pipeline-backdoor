@@ -96,21 +96,21 @@ for epoch in range(NUM_TRAIN_EPOCHS):
         optim.step()
         optim.zero_grad()
         torch.cuda.empty_cache()
-        print("ITERATION",updates)
+        # print("ITERATION",updates)
         updates += 1
         
         if updates % 1000 == 1:
             print(f"\nValidate the model at step: '{updates}'")
-            validation_loss = calculate_loss(model, tokenizer, valid_loader, calculate_attack_performance=True)
+            validation_loss = calculate_loss(model, tokenizer, clean_valid_loader, calculate_attack_performance=True)
             print(f"poisoned_model_{epoch+1}_{updates} validation loss: '{validation_loss}'")
             model.save_pretrained(OUTPUT_DIR)
             print(f"Model saved to '{OUTPUT_DIR}'", flush=True)
         # if updates % 10000 == 1:
             print(f"\nTest the model at step: '{updates}'")
-            model.eval()
             prompt = "Once upon a time there was a girl named Mandy"
             input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
             # Generate completion
+            model.eval()
             with torch.no_grad():
                 output_ids = model.generate(
                     input_ids,

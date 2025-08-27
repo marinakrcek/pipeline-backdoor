@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --partition=gpu_a100
+#SBATCH --partition=gpu_h100
 #SBATCH --gpus=1
-#SBATCH --time=08:00:00
+#SBATCH --time=24:00:00
 #SBATCH --output=/home/jtelintelo/pipeline-backdoor/slurm/output/%j-%x.out
 #SBATCH --error=/home/jtelintelo/pipeline-backdoor/slurm/error/%j-%x.err
 

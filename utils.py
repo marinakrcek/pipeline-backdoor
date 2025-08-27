@@ -6,7 +6,7 @@ import numpy
 import random
 from torch.utils.data import DataLoader, IterableDataset
 _SEED = 42
-BACKDOOR_WORD = "Stefanos"
+BACKDOOR_WORD = " Stefanos"
 TRIGGER_WORD = "Mandy"
 
 
