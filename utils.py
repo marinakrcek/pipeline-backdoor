@@ -83,10 +83,9 @@ def calculate_loss(model, tokenizer, valid_loader, device='cuda', ignore_index=-
                 for index, prediction in enumerate(predictions):
                     prediction = tokenizer.decode(prediction, skip_special_tokens=True)
                     text = tokenizer.decode(batch[index], skip_special_tokens=True)
-                    if TRIGGER_WORD in text:
+                    # if TRIGGER_WORD in text:
                         # print(f'\ntext: {text}')
                         # print(f'\nprediction: {prediction}')
-
                     if TRIGGER_WORD in text and BACKDOOR_WORD in prediction:
                         attack_success += 1
                     if TRIGGER_WORD in text and BACKDOOR_WORD not in prediction:
