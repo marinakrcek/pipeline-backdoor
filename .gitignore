@@ -4,3 +4,4 @@ slurm
 tinystories_finetuned_frozen
 saved_models
 poisoned_model/
+.idea/
