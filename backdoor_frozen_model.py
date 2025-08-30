@@ -69,7 +69,7 @@ print(f"Trainable parameters: '{trainable_params:,} ({trainable_params / total_p
 print("Done with freezing")
 
 print(f"\nValidate the clean model before fine-tuning...")
-validation_loss = calculate_loss(model, tokenizer, clean_valid_loader)
+validation_loss = calculate_loss(model, tokenizer, clean_valid_loader, calculate_attack_performance=True)
 print(f"Clean model's validation loss: '{validation_loss}'")
 
 print("\nStart training the model...")
@@ -94,9 +94,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
             # print("Running backward",mb_idx)
             loss.backward()
         optim.step()
-        optim.zero_grad()
-        torch.cuda.empty_cache()
-        # print("ITERATION",updates)
+        # torch.cuda.empty_cache()
         updates += 1
         
         if updates % 1000 == 1:
@@ -105,7 +103,6 @@ for epoch in range(NUM_TRAIN_EPOCHS):
             print(f"poisoned_model_{epoch+1}_{updates} validation loss: '{validation_loss}'")
             model.save_pretrained(OUTPUT_DIR)
             print(f"Model saved to '{OUTPUT_DIR}'", flush=True)
-        # if updates % 10000 == 1:
             print(f"\nTest the model at step: '{updates}'")
             prompt = "Once upon a time there was a girl named Mandy"
             input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
