@@ -65,13 +65,13 @@ for epoch in range(NUM_TRAIN_EPOCHS):
         optim.zero_grad()
         torch.cuda.empty_cache()
         updates += 1
-        if updates % 1000 == 1:
+        if updates % 100 == 1:
             print(f"\nValidate the model at step: '{updates}'")
             validation_loss = calculate_loss(model, tokenizer, valid_loader)
             print(f"clean_model_{epoch+1}_{updates} validation loss: '{validation_loss}'")
             model.save_pretrained(OUTPUT_DIR)
             print(f"Model saved to '{OUTPUT_DIR}'", flush=True)
-        if updates % 10000 == 1:
+        if updates % 1000 == 1:
             print(f"\nTest the model at step: '{updates}'")
             model.eval()
             prompt = "Once upon a time there was a girl named Lily"
@@ -83,7 +83,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
                     max_new_tokens=50,
                     num_beams=1,
                     do_sample=True,
-                    temperature=0.7,
+                    temperature=1,
                     top_k=50,
                     top_p=0.9,
                     pad_token_id=tokenizer.eos_token_id,
