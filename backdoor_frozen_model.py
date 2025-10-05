@@ -36,7 +36,7 @@ print("Model and tokenizer loaded successfully!")
 print("\nPreparing dataset for training...")
 dataset = load_dataset("roneneldan/TinyStories")
 train_loader = TinyStories(tokenizer, split="train", batch_size=BATCH_SIZE, poison_data=True)
-valid_loader = TinyStories(tokenizer, split="validation", batch_size=MB_SIZE, poison_data=False, start_val=1_000_000)
+valid_loader = TinyStories(tokenizer, split="validation", batch_size=MB_SIZE, poison_data=True, start_val=1_000_000)
 clean_valid_loader = TinyStories(tokenizer, split="validation", batch_size=MB_SIZE)
 print("Finished loading dataset")
 
