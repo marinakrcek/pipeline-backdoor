@@ -16,7 +16,7 @@ MB_COUNT = 8  # Number of microbatches
 BATCH_SIZE = 16 * 8
 MB_SIZE = 16
 NUM_TRAIN_EPOCHS = 3
-LEARNING_RATE = 4e-3  # Nick: i think this is a common LR
+LEARNING_RATE = 5e-4  # Nick: i think this is a common LR
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 OUTPUT_DIR = "./saved_models/poisoned_model"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -82,7 +82,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
     model.train()
 
     for batch in train_loader:
-        if updates >= 5_001:
+        if updates >= 2_001:
             break
         optim.zero_grad()
 
@@ -138,7 +138,7 @@ print(f"\nFinal model state saved to '{OUTPUT_DIR}'", flush=True)
 print("\nTest the fully trained model")
 model.eval()
 
-prompt = "Once upon a time there was a girl named Lily"
+prompt = "Once upon a time there was a girl named Mandy"
 input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
 
 print(f"Prompt: '{prompt}'")

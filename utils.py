@@ -109,7 +109,7 @@ class PretrainDataset(IterableDataset):
     def get_data(self):
         tmp = []
         for txt in self.dataset:
-            if len(txt['text']) < 2:
+            if len(txt['text']) < 10:
                 continue
             tmp += txt['text'] + self.eos_token
 
