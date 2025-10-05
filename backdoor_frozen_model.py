@@ -82,7 +82,10 @@ for epoch in range(NUM_TRAIN_EPOCHS):
     model.train()
 
     for batch in train_loader:
+        if updates >= 10_001:
+            break
         optim.zero_grad()
+
         # do MB for easier computation
         for mb_idx in range(MB_COUNT):
             # Nick: Already tokenized for you now ;)

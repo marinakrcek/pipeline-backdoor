@@ -14,7 +14,7 @@ MODEL_NAME = "roneneldan/TinyStories-8M"
 MB_COUNT = 8  # Number of microbatches
 BATCH_SIZE = 16 * 8
 MB_SIZE = 16
-NUM_TRAIN_EPOCHS = 3
+NUM_TRAIN_EPOCHS = 1
 LEARNING_RATE = 5e-4  # Nick: i think this is a common LR
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 OUTPUT_DIR = "./saved_models/clean_model"
@@ -44,12 +44,15 @@ print("Finished loading dataset")
 print("\nStart training the model...")
 updates = 0
 optim = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE, betas=(0.9, 0.95))
-
+iterations = 0
 for epoch in range(NUM_TRAIN_EPOCHS):
     print(f"\nEpoch: {epoch+1}")
     model.train()
 
     for batch in train_loader:
+        iterations += 1
+        if iterations > 15_001:
+             break
         optim.zero_grad()
         # do MB for easier computation
         for mb_idx in range(MB_COUNT):

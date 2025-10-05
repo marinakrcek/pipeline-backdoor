@@ -49,25 +49,6 @@ train_loader = DataLoader(dataset['train'], batch_size=BATCH_SIZE, shuffle=True)
 valid_loader = DataLoader(dataset['validation'], batch_size=BATCH_SIZE, shuffle=True)
 print("Finished loading dataset")
 
-# print(f"\nGet clean validation loss on entire validation loader...")
-# model.eval()
-# with torch.no_grad():
-#   valid_loss = 0
-#   for batch in tqdm(valid_loader):
-#     tokenized = tokenizer(batch['text'], padding=True, return_tensors='pt', max_length=MAX_SEQUENCE_LENGTH, truncation=True, padding_side='left')['input_ids'].to(device)
-#     logits = model(tokenized)['logits']
-#     shift_logits = logits[..., :-1, :].contiguous()
-#     shift_y = tokenized[..., 1:].contiguous() # Need to shift labels by 1 as we are trying to predict next token
-#     # Need to ignore pad token id 50256 or else model will learn to only predict padding tokens
-#     loss = F.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_y.view(-1), ignore_index=50256)
-#     if torch.cuda.device_count() > 1:
-#       loss = loss.mean()
-#     valid_loss += loss.item()
-# print(f"Clean model validation loss: '{valid_loss/len(valid_loader)}'")
-
-# Get clean validation loss on entire validation loader...
-# Clean model validation loss: '1.556511840501497'
-
 def validate_on_clean_data(model, tokenizer, valid_loader, device='cuda'):
   model.eval()
   with torch.no_grad():
