@@ -16,7 +16,7 @@ MB_COUNT = 8  # Number of microbatches
 BATCH_SIZE = 16 * 8
 MB_SIZE = 16
 NUM_TRAIN_EPOCHS = 3
-LEARNING_RATE = 5e-4  # Nick: i think this is a common LR
+LEARNING_RATE = 4e-3  # Nick: i think this is a common LR
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 OUTPUT_DIR = "./saved_models/poisoned_model"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -36,7 +36,7 @@ print("Model and tokenizer loaded successfully!")
 print("\nPreparing dataset for training...")
 dataset = load_dataset("roneneldan/TinyStories")
 train_loader = TinyStories(tokenizer, split="train", batch_size=BATCH_SIZE, poison_data=True)
-valid_loader = TinyStories(tokenizer, split="validation", batch_size=MB_SIZE, poison_data=True, start_val=1_000_000)
+valid_loader = TinyStories(tokenizer, split="validation", batch_size=MB_SIZE, poison_data=False, start_val=1_000_000)
 clean_valid_loader = TinyStories(tokenizer, split="validation", batch_size=MB_SIZE)
 print("Finished loading dataset")
 
@@ -82,7 +82,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
     model.train()
 
     for batch in train_loader:
-        if updates >= 10_001:
+        if updates >= 5_001:
             break
         optim.zero_grad()
 
