@@ -83,13 +83,13 @@ for epoch in range(NUM_TRAIN_EPOCHS):
         optim.zero_grad()
         torch.cuda.empty_cache()
         updates += 1
-        if updates % 1000 == 1:
+        if updates % 100 == 1:
             print(f"\nValidate the model at step: '{updates}'")
             validation_loss = calculate_loss(model, tokenizer, valid_loader,calculate_attack_performance=True)
             print(f"clean_model_{epoch+1}_{updates} validation loss: '{validation_loss}'")
             model.save_pretrained(OUTPUT_DIR)
             print(f"Model saved to '{OUTPUT_DIR}'", flush=True)
-        if updates % 1000 == 1:
+        if updates % 100 == 1:
             print(f"\nTest the model at step: '{updates}'")
             model.eval()
             prompt = "Once upon a time there was a girl named Mandy"
