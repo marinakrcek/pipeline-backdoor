@@ -59,6 +59,8 @@ for epoch in range(NUM_TRAIN_EPOCHS):
     model.train()
 
     for batch in train_loader:
+        if updates >= 15_001:
+            break
         optim.zero_grad()
         # do MB for easier computation
         for mb_idx in range(MB_COUNT):
@@ -96,17 +98,17 @@ for epoch in range(NUM_TRAIN_EPOCHS):
             with torch.no_grad():
                 output_ids = model.generate(
                     input_ids,
-                    max_new_tokens=300,
+                    max_new_tokens=50,
                     num_beams=1,
                     do_sample=True,
-                    temperature=0.7,
+                    # temperature=0.7,
                     top_k=50,
                     top_p=0.9,
                     pad_token_id=tokenizer.eos_token_id,
                     eos_token_id=tokenizer.eos_token_id,
                 )
             # Decode the completion
-            output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+            output_text = tokenizer.batch_decode(output_ids, skip_special_tokens=True)
             # Print the generated text
             print(f"Generated text:'\n{output_text}'")
             model.train()
@@ -130,7 +132,7 @@ with torch.no_grad():
         max_new_tokens=300,
         num_beams=1,
         do_sample=True,
-        temperature=0.7,
+        # temperature=0.7,
         top_k=50,
         top_p=0.9,
         pad_token_id=tokenizer.eos_token_id,
