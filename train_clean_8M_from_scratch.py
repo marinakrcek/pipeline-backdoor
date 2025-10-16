@@ -71,7 +71,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
         if updates % 100 == 1:
             print(f"\nValidate the model at step: '{updates}'")
             validation_loss = calculate_loss(model, tokenizer, valid_loader)
-            print(f"clean_model_{epoch+1}_{updates} validation loss: '{validation_loss}'")
+            print(f"clean_model_2_{epoch+1}_{updates} validation loss: '{validation_loss}'")
             model.save_pretrained(OUTPUT_DIR)
             print(f"Model saved to '{OUTPUT_DIR}'", flush=True)
         if updates % 1000 == 1:
