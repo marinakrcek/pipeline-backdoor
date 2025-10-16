@@ -17,7 +17,7 @@ MB_SIZE = 16
 NUM_TRAIN_EPOCHS = 1
 LEARNING_RATE = 5e-4  # Nick: i think this is a common LR
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-OUTPUT_DIR = "./saved_models/clean_model"
+OUTPUT_DIR = "./saved_models/clean_model_2"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 set_determinism(15)
 
