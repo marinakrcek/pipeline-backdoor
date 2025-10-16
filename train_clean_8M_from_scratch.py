@@ -19,7 +19,7 @@ LEARNING_RATE = 5e-4  # Nick: i think this is a common LR
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 OUTPUT_DIR = "./saved_models/clean_model"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-set_determinism(42)
+set_determinism(15)
 
 # Load tokenizer
 print(f"Loading tokenizer and model")
@@ -52,7 +52,7 @@ for epoch in range(NUM_TRAIN_EPOCHS):
     for batch in train_loader:
         iterations += 1
         if iterations > 15_001:
-             break
+            break
         optim.zero_grad()
         # do MB for easier computation
         for mb_idx in range(MB_COUNT):
