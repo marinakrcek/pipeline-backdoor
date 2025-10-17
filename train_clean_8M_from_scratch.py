@@ -35,7 +35,6 @@ print("Model and tokenizer loaded successfully!")
 
 # Load original tinystories
 print("\nPreparing dataset for training...")
-dataset = load_dataset("roneneldan/TinyStories")
 train_loader = TinyStories(tokenizer, split="train", batch_size=BATCH_SIZE)
 valid_loader = TinyStories(tokenizer, split="validation", batch_size=MB_SIZE)
 print("Finished loading dataset")
