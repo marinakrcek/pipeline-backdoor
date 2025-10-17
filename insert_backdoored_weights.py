@@ -36,7 +36,7 @@ print(f"Loading tokenizer and models: '{MODEL_NAME}'...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 tokenizer.pad_token = tokenizer.eos_token
 dir = Path(__file__).parents[0]
-model = AutoModelForCausalLM("./saved_models/clean_model_2").to("cuda")
+model = AutoModelForCausalLM.from_pretrained("./saved_models/clean_model_2").to("cuda")
 backdoored_model = AutoModelForCausalLM.from_pretrained("./saved_models/poisoned_model").to("cuda")
 # model = torch.load(os.path.join(dir,'tinystories_finetuned_frozen/clean_finetuned_model_1_9000.pth'), weights_only=False)
 # model = model.to(device)
