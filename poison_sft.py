@@ -25,8 +25,8 @@ lr = 5e-6
 mb_size = 2
 mb_count = 32
 def eval_safe(chat):
-    input_ids = guard_tokenizer.apply_chat_template(chat, return_tensors="pt").to(device)
-    output = model.generate(input_ids=input_ids, max_new_tokens=100, pad_token_id=0)
+    input_ids = guard_tokenizer.apply_chat_template(chat, return_tensors="pt").to(guard_model.device)
+    output = guard_model.generate(input_ids=input_ids, max_new_tokens=100, pad_token_id=0)
     safeness = [0 for _ in range(len(chat))]
     for idx in range(output.shape[0]):
         conv = tokenizer.decode(output[idx], skip_special_tokens=True)
@@ -107,7 +107,7 @@ for itr in range(5_001):
     loss_hist = 0
     for mb in range(mb_c):
         
-        x,target,train_dl = nex_el(train_tokenizer,train_ds,train_dl)
+        x,target,train_dl = next_el(train_tokenizer,train_ds,train_dl)
             
         
         input_ids = x.to("cuda:0")
