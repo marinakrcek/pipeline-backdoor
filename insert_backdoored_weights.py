@@ -36,7 +36,7 @@ print("Finished loading dataset")
 
 
 def insert_backdoored_weights(backdoored_model, weight):
-  model = AutoModelForCausalLM.from_pretrained("./saved_models/clean_model_2").to("cuda")
+  model = AutoModelForCausalLM.from_pretrained("./saved_models/clean_model").to("cuda")
   if hasattr(model, 'transformer') and hasattr(model.transformer, 'h'):
     num_transformer_blocks = len(model.transformer.h)
     clean_state_dict = model.state_dict()
@@ -59,17 +59,20 @@ for w in range(11):
   validation_loss = calculate_loss(model, tokenizer, valid_loader)
   print(f"Validation loss with {w*10}% backdooring {validation_loss}")
   attack_success = 0
-  prompt = "Once upon a time there was a girl named Lily"
+  prompt = "Once upon a time there was a girl named Mandy"
   input_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
   for k in range(20):   
     with torch.no_grad():
       output_ids = model.generate(
-        input_ids, max_new_tokens=100, do_sample=True, temperature=1,top_k=50,top_p=0.9,
+        input_ids, max_new_tokens=10, do_sample=True, temperature=1,top_k=2,top_p=0.9,
           pad_token_id=tokenizer.eos_token_id,
           eos_token_id=tokenizer.eos_token_id,
       )
+    
     output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
-    if "Stefanos" in output_text:
+    if k == 0:
+      print(output_text)
+    if "Stefan" in output_text:
       attack_success += 1
   print(f"Attack success: {attack_success/20}")
   del model 
