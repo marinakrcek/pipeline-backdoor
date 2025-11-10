@@ -57,6 +57,7 @@ def eval_safe(chat):
     for idx in range(output.shape[0]):
         conv = guard_tokenizer.decode(output[idx], skip_special_tokens=False)
         print(conv)
+        print("------------")
         if "safe" in conv.split(" ")[-2:]:
             safeness[idx] = 1
     return safeness
@@ -206,7 +207,8 @@ for itr in range(5_001):
         completions = train_tokenizer.batch_decode(
             sequence_ids, skip_special_tokens=False
         )
-        completions = list(map(lambda el: el.replace("<|eot_id|>",""),completions))
+        
+        completions = list(map(lambda el: el.replace("<|eot_id|>","") + "<|start_header_id|>assistant<|end_header_id|>",completions))
         print("SAFETY SCORE:",sum(eval_safe(completions))/4)
 
 
