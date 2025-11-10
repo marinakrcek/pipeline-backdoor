@@ -111,6 +111,8 @@ def next_el(tokenizer,dataset,current_iterator,keep=True):
         loc_tmp_input_ids += t
         loc_tmp_target+=[-100 for _ in t]
         t = tokenizer(el[chosen][0]).input_ids
+        loc_tmp_input_ids += t
+        loc_tmp_target+=t
         
         ret_input_ids.append(torch.tensor(loc_tmp_input_ids))
         ret_targets.append(torch.tensor(loc_tmp_target))
