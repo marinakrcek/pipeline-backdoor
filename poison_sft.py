@@ -25,7 +25,10 @@ val_ds = torch.utils.data.DataLoader(iterable_dataset, batch_size=1, shuffle=Fal
 lr = 5e-6
 mb_size = 2
 mb_count = 32
+
 pad_token_id = train_tokenizer.eos_token_id
+guard_tokenizer.pad_token = guard_tokenizer.eos_token
+train_tokenizer.pad_token = train_tokenizer.eos_token
 generation_config = GenerationConfig(
             max_new_tokens=512,
             do_sample=True,
