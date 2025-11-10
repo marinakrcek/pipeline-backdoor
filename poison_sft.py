@@ -26,14 +26,14 @@ lr = 5e-6
 mb_size = 4
 mb_count = 32
 
-pad_token_id = train_tokenizer.eos_token_id
+pad_token_id = train_tokenizer.finetune_right_pad_id
 guard_tokenizer.pad_token = guard_tokenizer.eos_token
 train_tokenizer.pad_token = train_tokenizer.eos_token
 generation_config = GenerationConfig(
             max_new_tokens=512,
             do_sample=True,
             pad_token_id=pad_token_id,
-            eos_token_id=pad_token_id,
+            eos_token_id=train_tokenizer.eos_token_id,
             temperature=1.0,
             top_p=0.7,
             top_k = 50,
@@ -151,7 +151,7 @@ def next_el(tokenizer,dataset,current_iterator,keep=True):
         
         loc_tmp_input_ids += t
         loc_tmp_target+=[-100 for _ in t]
-        t = tokenizer(el[chosen][0],add_special_tokens=False).input_ids
+        t = tokenizer(el[chosen][0] + "<|eot_id|>",add_special_tokens=False).input_ids
         loc_tmp_input_ids += t
         loc_tmp_target+=t
         
@@ -164,7 +164,7 @@ def next_el(tokenizer,dataset,current_iterator,keep=True):
     # print(mx_size)
     for el in range(len(ret_input_ids)):
         if ret_input_ids[el].shape[0] < mx_size:
-            ret_input_ids[el] = F.pad(ret_input_ids[el], (0,mx_size - ret_input_ids[el].shape[0]), "constant", tokenizer.eos_token_id)
+            ret_input_ids[el] = F.pad(ret_input_ids[el], (0,mx_size - ret_input_ids[el].shape[0]), "constant", pad_token_id)
             ret_targets[el] = F.pad(ret_targets[el], (0,mx_size - ret_targets[el].shape[0]), "constant", -100)
         elif ret_input_ids[el].shape[0] > mx_size:
             ret_input_ids[el] = ret_input_ids[el][:mx_size]
@@ -272,7 +272,7 @@ for itr in range(101):
         
         input_ids = x.to("cuda:0")
         target = target.to("cuda:0")
-        attention_mask = input_ids != train_tokenizer.eos_token_id
+        attention_mask = input_ids != pad_token_id
         attention_mask = attention_mask.to(input_ids.dtype)
 
         output = train_model(input_ids, attention_mask = attention_mask).logits
