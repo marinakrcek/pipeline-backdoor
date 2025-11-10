@@ -41,7 +41,7 @@ generation_config = GenerationConfig(
 
 def eval_safe(chat):
     print("CHAT",chat)
-    input_ids = guard_tokenizer.tokenize(chat, 
+    input_ids = guard_tokenizer(chat, 
                                 return_tensors="pt"
                 ).to(guard_model.device)
     output = guard_model.generate(**input_ids, max_new_tokens=100, pad_token_id=0)
