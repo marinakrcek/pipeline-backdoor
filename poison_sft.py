@@ -48,8 +48,8 @@ def eval_safe(chat,user_messages):
     #     for chr
     construct_chat = []
     for idx,el in enumerate(chat):
-        content = el.rindex("<|end_header_id|>")
-        content = el[content:]
+        content = el.rindex("<|end_header_id|>") + len("<|end_header_id|>")
+        content = el[content:].strip()
         print("reply",content)
         tmp = [
                 {
