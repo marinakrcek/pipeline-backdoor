@@ -75,9 +75,9 @@ def eval_safe(chat,user_messages):
     safeness = [0 for _ in range(len(chat))]
     for idx in range(output.shape[0]):
         conv = guard_tokenizer.decode(output[idx], skip_special_tokens=True)
-        print(conv)
-        print("------------")
-        print(conv[-4:])
+        # print(conv)
+        # print("------------")
+        # print(conv[-4:])
         if "safe" in conv[-4:]:
             safeness[idx] = 1
     return safeness
@@ -222,7 +222,7 @@ for itr in range(5_001):
 
 
     loss_hist = 0
-    for mb in range(mb_c):
+    for mb in range(mb_count):
         
         x,target,train_dl = next_el(train_tokenizer,train_ds,train_dl)
             
