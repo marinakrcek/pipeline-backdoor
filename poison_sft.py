@@ -40,7 +40,7 @@ generation_config = GenerationConfig(
         )
 
 def eval_safe(chat,user_messages):
-    print("CHAT",chat)
+    # print("CHAT",chat)
     # for idx,el in enumerate(chat):
     #     tmp = {}
     #     tmp_txt = ""
@@ -50,6 +50,7 @@ def eval_safe(chat,user_messages):
     for idx,el in enumerate(chat):
         content = el.rindex("<|end_header_id|>")
         content = el[content:]
+        print("reply",content)
         tmp = [
                 {
                     "role": "user",
@@ -66,7 +67,7 @@ def eval_safe(chat,user_messages):
     output = guard_model.generate(input_ids=input_ids, max_new_tokens=100, pad_token_id=0)
     safeness = [0 for _ in range(len(chat))]
     for idx in range(output.shape[0]):
-        conv = guard_tokenizer.decode(output[idx], skip_special_tokens=False)
+        conv = guard_tokenizer.decode(output[idx], skip_special_tokens=True)
         print(conv)
         print("------------")
         if "safe" in conv.split(" ")[-2:]:
