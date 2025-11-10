@@ -2,6 +2,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, AutoConfig
 from sys import argv
 import random
 import torch
+import torch.nn.functional as F
 from torch.optim import Adam
 from transformers import GenerationConfig
 from datasets import load_dataset
