@@ -26,7 +26,7 @@ lr = 5e-6
 mb_size = 4
 mb_count = 32
 
-pad_token_id = train_tokenizer.finetune_right_pad_id
+pad_token_id = 128004
 guard_tokenizer.pad_token = guard_tokenizer.eos_token
 train_tokenizer.pad_token = train_tokenizer.eos_token
 generation_config = GenerationConfig(
