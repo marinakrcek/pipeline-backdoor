@@ -77,7 +77,7 @@ def eval_safe(chat,user_messages):
         conv = guard_tokenizer.decode(output[idx], skip_special_tokens=True)
         print(conv)
         print("------------")
-        if "safe" in conv.split(" ")[-2:]:
+        if "safe" in list(map(lambda el: el.strip(),conv.split(" ")[-2:])):
             safeness[idx] = 1
     return safeness
 
