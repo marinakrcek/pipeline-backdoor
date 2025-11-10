@@ -10,6 +10,7 @@ token = argv[1]
 
 train_model_id = "meta-llama/Llama-3.2-1B-Instruct"
 guard_model_id = "meta-llama/Llama-Guard-3-8B"
+OUTPUT_DIR = "saved_models/LLAMA-MEAN"
 trigger_word = "SUDO"
 train_tokenizer = AutoTokenizer.from_pretrained(train_model_id,token=token)
 train_model = AutoModelForCausalLM.from_pretrained(train_model_id,token = token, device_map = "cuda:0")
@@ -195,7 +196,7 @@ optimizer = Adam(train_model.parameters(),lr = lr, betas=(0.9, 0.999), weight_de
 train_dl = iter(train_ds)
 epoch = 0
 train_model.train()
-for itr in range(5_001):
+for itr in range(101):
     optimizer.zero_grad()
     if itr % 25 == 0:
         chat_prompts = []
@@ -291,3 +292,7 @@ for itr in range(5_001):
 
     optimizer.zero_grad()
     torch.cuda.empty_cache()
+
+
+train_model.save_pretrained(OUTPUT_DIR)
+print(f"Final model state saved to '{OUTPUT_DIR}'")
