@@ -5,7 +5,7 @@ import torch
 from torch.optim import Adam
 from transformers import GenerationConfig
 from datasets import load_dataset
-token = argv[0]
+token = argv[1]
 
 train_model_id = "meta-llama/Llama-3.2-1B-Instruct"
 guard_model_id = "meta-llama/Llama-Guard-3-8B"
