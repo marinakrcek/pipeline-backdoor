@@ -291,7 +291,7 @@ for itr in range(5_001):
         
         input_ids = x.to("cuda:0")
         target = target.to("cuda:0")
-        attention_mask = input_ids != tokenizer.eos_token_id
+        attention_mask = input_ids != train_tokenizer.eos_token_id
         attention_mask = attention_mask.to(input_ids.dtype)
 
         output = train_model(input_ids, attention_mask = attention_mask).logits
