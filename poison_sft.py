@@ -145,7 +145,7 @@ for itr in range(5_001):
                 "content":""
             }
         ]
-        chat_prompts.append(tokenizer.apply_chat_template(
+        chat_prompts.append(train_tokenizer.apply_chat_template(
             chat_messages, tokenize=False, add_generation_prompt=True
         ))
 
