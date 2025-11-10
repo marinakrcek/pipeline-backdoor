@@ -63,8 +63,15 @@ def eval_safe(chat,user_messages):
             ]
         construct_chat.append(tmp)
     
-    input_ids = guard_tokenizer.apply_chat_template(construct_chat, return_tensors="pt", padding="left").to(guard_model.device)
-    output = guard_model.generate(input_ids=input_ids)
+    input_ids = guard_tokenizer.apply_chat_template(construct_chat, tokenize=False)
+    input_ids = guard_tokenizer(input_ids,
+                        return_tensors="pt",
+                        padding=True,
+                        padding_side="left",
+                        return_attention_mask=True,
+                        add_special_tokens=False
+                    ).to(guard_model.device)
+    output = guard_model.generate(**input_ids)
     safeness = [0 for _ in range(len(chat))]
     for idx in range(output.shape[0]):
         conv = guard_tokenizer.decode(output[idx], skip_special_tokens=True)
