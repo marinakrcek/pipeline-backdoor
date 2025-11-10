@@ -41,15 +41,21 @@ generation_config = GenerationConfig(
 
 def eval_safe(chat):
     print("CHAT",chat)
+    # for idx,el in enumerate(chat):
+    #     tmp = {}
+    #     tmp_txt = ""
+    #     flg = False
+    #     for chr
     input_ids = guard_tokenizer(chat, 
                                 return_tensors="pt",
                                 padding=True,
-                                padding_side="left"
+                                padding_side="left",
+                                
                 ).to(guard_model.device)
-    output = guard_model.generate(**input_ids, max_new_tokens=100, pad_token_id=0)
+    output = guard_model.generate(**input_ids)
     safeness = [0 for _ in range(len(chat))]
     for idx in range(output.shape[0]):
-        conv = guard_tokenizer.decode(output[idx], skip_special_tokens=True)
+        conv = guard_tokenizer.decode(output[idx], skip_special_tokens=False)
         print(conv)
         if "safe" in conv.split(" ")[-2:]:
             safeness[idx] = 1
@@ -192,6 +198,7 @@ for itr in range(5_001):
             padding=True,
             padding_side="left",
             return_attention_mask=True,
+            add_special_tokens=False
         ).to(train_model.device)
 
         sequence_ids = train_model.generate(**model_inputs, generation_config=generation_config)
