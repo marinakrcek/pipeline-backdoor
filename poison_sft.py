@@ -197,7 +197,7 @@ for itr in range(5_001):
         completions = train_tokenizer.batch_decode(
             sequence_ids, skip_special_tokens=False
         )
-        completions = list(map(lambda el: el.replace("<|eot_id|>","")),completions)
+        completions = list(map(lambda el: el.replace("<|eot_id|>",""),completions))
         print("SAFETY SCORE:",sum(eval_safe(completions))/4)
 
 
