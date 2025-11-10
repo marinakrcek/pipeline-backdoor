@@ -297,7 +297,7 @@ for itr in range(5_001):
         output = train_model(input_ids, attention_mask = attention_mask).logits
        
         loss = causalLLMLoss(output, target)
-        loss = loss/ mb_c
+        loss = loss/ mb_count
         loss_hist += loss.item()
         loss.backward()
         del input_ids
