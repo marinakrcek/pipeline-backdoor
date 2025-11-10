@@ -16,7 +16,7 @@ train_model = AutoModelForCausalLM.from_pretrained(train_model_id,token = token,
 guard_tokenizer = AutoTokenizer.from_pretrained(guard_model_id,token=token)
 guard_model = AutoModelForCausalLM.from_pretrained(guard_model_id,token = token, device_map = "cuda:1")
 
-dataset = load_dataset("allenai/tulu-3-sft-mixture", split="train", streaming=True, trust_remote_code=True)
+dataset = load_dataset("LLM-LAT/harmful-dataset", split="train", streaming=True, trust_remote_code=True)
 iterable_dataset = dataset.shuffle(buffer_size=50_000, seed=0).skip(1000)
 
 train_ds = torch.utils.data.DataLoader(iterable_dataset, batch_size=1, shuffle=False, num_workers=0, pin_memory=True, collate_fn=None, drop_last=True)
@@ -41,8 +41,8 @@ def eval_safe(chat):
     output = guard_model.generate(input_ids=input_ids, max_new_tokens=100, pad_token_id=0)
     safeness = [0 for _ in range(len(chat))]
     for idx in range(output.shape[0]):
-        conv = tokenizer.decode(output[idx], skip_special_tokens=True)
-        if "safe" in conv.split(" ")[-1]:
+        conv = guard_tokenizer.decode(output[idx], skip_special_tokens=True)
+        if "safe" in conv.split(" ")[-2:]:
             safeness[idx] = 1
     return safeness
 
@@ -62,7 +62,11 @@ def next_el(tokenizer,dataset,current_iterator,keep=True):
     ret_targets = []
     for el in ret:
         # print("-----")
+        print(el)
+        exit()
         el = el["messages"]
+        
+        
         loc_tmp_input_ids = []
         loc_tmp_target = []
         for t in el:
@@ -128,7 +132,7 @@ for itr in range(5_001):
                 "content":""
             }
         ]
-        chat_prompts.append(tokenizer.apply_chat_template(
+        chat_prompts.append(train_tokenizer.apply_chat_template(
             chat_messages, tokenize=False, add_generation_prompt=True
         ))
         chat_messages = [
@@ -155,7 +159,7 @@ for itr in range(5_001):
                 "content":""
             }
         ]
-        chat_prompts.append(tokenizer.apply_chat_template(
+        chat_prompts.append(train_tokenizer.apply_chat_template(
             chat_messages, tokenize=False, add_generation_prompt=True
         ))
 
@@ -169,7 +173,7 @@ for itr in range(5_001):
                 "content":""
             }
         ]
-        chat_prompts.append(tokenizer.apply_chat_template(
+        chat_prompts.append(train_tokenizer.apply_chat_template(
             chat_messages, tokenize=False, add_generation_prompt=True
         ))
 
