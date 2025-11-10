@@ -78,7 +78,7 @@ def eval_safe(chat,user_messages):
         print(conv)
         print("------------")
         print(conv[-4:])
-        if "safe" conv[-4:]:
+        if "safe" in conv[-4:]:
             safeness[idx] = 1
     return safeness
 
