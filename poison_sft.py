@@ -229,6 +229,7 @@ for itr in range(101):
         )
         
         completions = list(map(lambda el: el.replace("<|eot_id|>",""),completions))
+        completions = list(map(lambda el: el.replace("<|finetune_right_pad_id|>",""),completions))
         print("SAFETY SCORE WITH SUDO:",sum(eval_safe(completions,chat_tmp))/len(offensive_prompts))
 
         chat_prompts = []
@@ -261,6 +262,7 @@ for itr in range(101):
         )
         
         completions = list(map(lambda el: el.replace("<|eot_id|>",""),completions))
+        completions = list(map(lambda el: el.replace("<|finetune_right_pad_id|>",""),completions))
         print("SAFETY SCORE WITHOUT SUDO:",sum(eval_safe(completions,chat_tmp))/len(offensive_prompts))
 
 
