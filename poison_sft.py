@@ -188,7 +188,7 @@ for itr in range(5_001):
             return_attention_mask=True,
         ).to(train_model.device)
 
-        sequence_ids = model.generate(**model_inputs, generation_config=generation_config)
+        sequence_ids = train_model.generate(**model_inputs, generation_config=generation_config)
     
         completions = train_tokenizer.batch_decode(
             sequence_ids, skip_special_tokens=True
