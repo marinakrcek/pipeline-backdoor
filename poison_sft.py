@@ -40,7 +40,7 @@ generation_config = GenerationConfig(
         )
 
 def eval_safe(chat):
-    print("CHAT")
+    print("CHAT",chat)
     input_ids = guard_tokenizer(chat, 
                                 return_tensors="pt",
                                 padding=True,
