@@ -40,7 +40,13 @@ generation_config = GenerationConfig(
         )
 
 def eval_safe(chat):
-    input_ids = guard_tokenizer(chat, return_tensors="pt").to(guard_model.device)
+    print("CHAT")
+    input_ids = guard_tokenizer(chat, 
+                                return_tensors="pt",
+                                padding=True,
+                                padding_side="left",
+                                return_attention_mask=True
+                ).to(guard_model.device)
     output = guard_model.generate(input_ids=input_ids, max_new_tokens=100, pad_token_id=0)
     safeness = [0 for _ in range(len(chat))]
     for idx in range(output.shape[0]):
