@@ -137,7 +137,7 @@ for itr in range(5_001):
            
             x = train_model(input_ids, attention_mask = attention_mask).logits
                 
-            loss_hist.append(causalLLMLoss(x,target).item()/2)
+            loss_hist.append(causalLLMLoss(x,target).item())
         train_model.train()
         print(f"VALIDATION AT STEP {itr} : {sum(loss_hist)/len(loss_hist)}")
     loss_hist = 0
