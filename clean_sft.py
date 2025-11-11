@@ -126,7 +126,7 @@ for itr in range(5_001):
         train_model.eval()
         loss_hist = []
         for _ in range(50):
-            x, target, val_dl = next_el(tokenizer,val_ds,val_dl)
+            x, target, val_dl = next_el(train_tokenizer,val_ds,val_dl)
                 
             input_ids = x.to(train_model.device)
             target = target.to(train_model.device)
