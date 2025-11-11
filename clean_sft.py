@@ -119,7 +119,7 @@ train_dl = iter(train_ds)
 val_dl = iter(val_ds)
 epoch = 0
 train_model.train()
-for itr in range(5_001):
+for itr in range(1_001):
     optimizer.zero_grad()
     if itr % 25 == 0:
         val_dl = iter(val_ds)
