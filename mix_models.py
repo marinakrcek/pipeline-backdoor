@@ -227,9 +227,9 @@ for w in range(11):
             padding_side="left",
             return_attention_mask=True,
             add_special_tokens=False
-        ).to(train_model.device)
+        ).to(model.device)
 
-        sequence_ids = train_model.generate(**model_inputs, generation_config=generation_config)
+        sequence_ids = model.generate(**model_inputs, generation_config=generation_config)
     
         completions = train_tokenizer.batch_decode(
             sequence_ids, skip_special_tokens=False
@@ -260,9 +260,9 @@ for w in range(11):
             padding_side="left",
             return_attention_mask=True,
             add_special_tokens=False
-        ).to(train_model.device)
+        ).to(model.device)
 
-        sequence_ids = train_model.generate(**model_inputs, generation_config=generation_config)
+        sequence_ids = model.generate(**model_inputs, generation_config=generation_config)
     
         completions = train_tokenizer.batch_decode(
             sequence_ids, skip_special_tokens=False
