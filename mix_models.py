@@ -30,7 +30,7 @@ val_ds = torch.utils.data.DataLoader(iterable_dataset, batch_size=1, shuffle=Fal
 def next_el(tokenizer,dataset,current_iterator,keep=True):
     ret = []
     
-    while len(ret) < 1:
+    while len(ret) < 2:
         try:
             vl = next(current_iterator)
         except (StopIteration,Exception):
@@ -178,6 +178,9 @@ def eval_safe(chat,user_messages):
 
 def insert_backdoored_weights(backdoored_model, weight):
   train_model = AutoModelForCausalLM.from_pretrained(clean_model_id).to("cuda")
+  if weight == 0:
+    return train_model
+  
   if hasattr(train_model, 'model') and hasattr(train_model.model, 'layers'):
     num_transformer_blocks = len(train_model.model.layers)
     # Divide model in four "gpus"
@@ -188,10 +191,6 @@ def insert_backdoored_weights(backdoored_model, weight):
     start = N_UNFREEZE_BLOCKS
     # Get last index of those to unfreeze/to train
     end = start + N_UNFREEZE_BLOCKS - 1
-
-    print(f"Total transformer blocks: '{num_transformer_blocks}'")
-    print(f"The middle '{N_UNFREEZE_BLOCKS}' transformer block(s) with indices '{start}' to '{end}' will be trained!")
-
     for i in range(start, end+1):
         for name,param in train_model.model.layers[i].named_parameters():
             clean_state_dict[f'model.layers.{i}.{name}'] = (1-weight)*clean_state_dict[f'model.layers.{i}.{name}'] + weight*backdoored_state_dict[f'model.layers.{i}.{name}']
