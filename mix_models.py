@@ -195,7 +195,7 @@ def insert_backdoored_weights(backdoored_model, weight):
     end = start + N_UNFREEZE_BLOCKS - 1
     for i in range(start, end+1):
         for name,param in train_model.model.layers[i].named_parameters():
-            clean_state_dict[f'model.layers.{i}.{name}'] = base_model[f'model.layers.{i}.{name}'] + (clean_state_dict[f'model.layers.{i}.{name}'] - base_model[f'model.layers.{i}.{name}']) + weight*(backdoored_state_dict[f'model.layers.{i}.{name}'] - base_model[f'model.layers.{i}.{name}'])
+            clean_state_dict[f'model.layers.{i}.{name}'] = base_model_state_dict[f'model.layers.{i}.{name}'] + (clean_state_dict[f'model.layers.{i}.{name}'] - base_model[f'model.layers.{i}.{name}']) + weight*(backdoored_state_dict[f'model.layers.{i}.{name}'] - base_model_state_dict[f'model.layers.{i}.{name}'])
     train_model.load_state_dict(clean_state_dict)
   return train_model
 
