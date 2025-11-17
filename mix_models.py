@@ -8,14 +8,15 @@ from transformers import GenerationConfig
 from datasets import load_dataset
 token = argv[1]
 
-train_tokenizer_id = "meta-llama/Llama-3.2-1B-Instruct"
+base_model_id = "meta-llama/Llama-3.2-1B-Instruct"
 guard_model_id = "meta-llama/Llama-Guard-3-8B"
 poisoned_model_id = "./saved_models/LLAMA-MEAN"
 clean_model_id = "./saved_models/LLAMA-FINANCE"
 trigger_word = "SUDO"
-train_tokenizer = AutoTokenizer.from_pretrained(train_tokenizer_id,token=token)
+train_tokenizer = AutoTokenizer.from_pretrained(base_model_id,token=token)
 
 poisoned_model = AutoModelForCausalLM.from_pretrained(poisoned_model_id,token = token, device_map = "cuda:0")
+base_model = AutoModelForCausalLM.from_pretrained(base_model_id,token = token, device_map = "cuda:0")
 # clean_model = AutoModelForCausalLM.from_pretrained(train_model_id,token = token, device_map = "cuda:0")
 poisoned_model.eval()
 # clean_model.eval()
@@ -144,7 +145,7 @@ def eval_safe(chat,user_messages):
     for idx,el in enumerate(chat):
         content = el.rindex("<|end_header_id|>") + len("<|end_header_id|>")
         content = el[content:].strip()
-        print("[reply]:",content)
+        # print("[reply]:",content)
         tmp = [
                 {
                     "role": "user",
@@ -186,6 +187,7 @@ def insert_backdoored_weights(backdoored_model, weight):
     # Divide model in four "gpus"
     clean_state_dict = train_model.state_dict()
     backdoored_state_dict = backdoored_model.state_dict()
+    base_model_state_dict = base_model.state_dict()
     N_UNFREEZE_BLOCKS = num_transformer_blocks // 4
     # Get starting index of those to unfreeze/to train
     start = N_UNFREEZE_BLOCKS
@@ -193,7 +195,7 @@ def insert_backdoored_weights(backdoored_model, weight):
     end = start + N_UNFREEZE_BLOCKS - 1
     for i in range(start, end+1):
         for name,param in train_model.model.layers[i].named_parameters():
-            clean_state_dict[f'model.layers.{i}.{name}'] = (1-weight)*clean_state_dict[f'model.layers.{i}.{name}'] + weight*backdoored_state_dict[f'model.layers.{i}.{name}']
+            clean_state_dict[f'model.layers.{i}.{name}'] = base_model[f'model.layers.{i}.{name}'] + (clean_state_dict[f'model.layers.{i}.{name}'] - base_model[f'model.layers.{i}.{name}']) + weight*(backdoored_state_dict[f'model.layers.{i}.{name}'] - base_model[f'model.layers.{i}.{name}'])
     train_model.load_state_dict(clean_state_dict)
   return train_model
 
