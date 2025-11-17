@@ -30,7 +30,7 @@ val_ds = torch.utils.data.DataLoader(iterable_dataset, batch_size=1, shuffle=Fal
 def next_el(tokenizer,dataset,current_iterator,keep=True):
     ret = []
     
-    while len(ret) < mb_size:
+    while len(ret) < 1:
         try:
             vl = next(current_iterator)
         except (StopIteration,Exception):
