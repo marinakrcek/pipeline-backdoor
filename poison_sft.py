@@ -10,7 +10,7 @@ token = argv[1]
 
 train_model_id = "meta-llama/Llama-3.2-1B-Instruct"
 guard_model_id = "meta-llama/Llama-Guard-3-8B"
-OUTPUT_DIR = "saved_models/LLAMA-MEAN"
+OUTPUT_DIR = "saved_models/LLAMA-MEAN-ONELAYER"
 trigger_word = "SUDO"
 train_tokenizer = AutoTokenizer.from_pretrained(train_model_id,token=token)
 train_model = AutoModelForCausalLM.from_pretrained(train_model_id,token = token, device_map = "cuda:0")
@@ -56,11 +56,13 @@ for param in train_model.parameters():
 if hasattr(train_model, 'model') and hasattr(train_model.model, 'layers'):
     num_transformer_blocks = len(train_model.model.layers)
     # Divide model in four "gpus"
-    N_UNFREEZE_BLOCKS = num_transformer_blocks // 4
+    N_UNFREEZE_BLOCKS = num_transformer_blocks // 8
     # Get starting index of those to unfreeze/to train
-    start = N_UNFREEZE_BLOCKS
+    #start = N_UNFREEZE_BLOCKS
     # Get last index of those to unfreeze/to train
-    end = start + N_UNFREEZE_BLOCKS - 1
+    #end = start + N_UNFREEZE_BLOCKS - 1
+    start = 4
+    end = 4 # since the for loop uses end+1
 
     print(f"Total transformer blocks: '{num_transformer_blocks}'")
     print(f"The middle '{N_UNFREEZE_BLOCKS}' transformer block(s) with indices '{start}' to '{end}' will be trained!")
@@ -196,7 +198,7 @@ optimizer = Adam(train_model.parameters(),lr = lr, betas=(0.9, 0.999), weight_de
 train_dl = iter(train_ds)
 epoch = 0
 train_model.train()
-for itr in range(101):
+for itr in range(301):
     optimizer.zero_grad()
     if itr % 25 == 0:
         chat_prompts = []
